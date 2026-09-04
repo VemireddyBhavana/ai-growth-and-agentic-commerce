@@ -24,7 +24,7 @@ import {
   type ForgotPasswordFormValues,
 } from '@/lib/auth/validation/schemas';
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordContent() {
   const [sent, setSent] = React.useState<{ email: string } | null>(null);
   const form = useZodForm(forgotPasswordSchema, { defaultValues: { email: '' } });
   const auth = useAuthActions();
@@ -212,5 +212,13 @@ export default function ForgotPasswordPage() {
         .
       </motion.p>
     </AuthPageShell>
+  );
+}
+
+export default function ForgotPasswordPage() {
+  return (
+    <React.Suspense fallback={<div className="min-h-screen bg-obsidian-950 flex items-center justify-center text-white/50">Loading...</div>}>
+      <ForgotPasswordContent />
+    </React.Suspense>
   );
 }
