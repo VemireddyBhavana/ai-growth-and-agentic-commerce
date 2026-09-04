@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://ai-sales-assistant.example.com/sitemap.xml

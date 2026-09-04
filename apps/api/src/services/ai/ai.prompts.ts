@@ -1,0 +1,3 @@
+import type { AiCatalogProduct } from './ai.types.js';
+export const intentPrompt = `Extract shopping requirements as JSON. Do not infer facts not stated. For vague requests use CLARIFICATION_REQUIRED. Currency defaults to INR. Return only JSON matching the schema.`;
+export function rankingPrompt(products: AiCatalogProduct[]): string { return `Rank only these database products. Never invent, alter, or reference a product ID, price, availability, brand, or feature outside this list. Return JSON array only with productId, rank, confidence, concise reason, matchedPreferences. Products: ${JSON.stringify(products)}`; }

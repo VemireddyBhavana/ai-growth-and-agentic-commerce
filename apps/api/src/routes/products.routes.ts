@@ -1,0 +1,28 @@
+import { Router } from 'express';
+import { z } from 'zod';
+import { authenticate, requireRoles } from '../middleware/auth.middleware.js';
+import { resolveMerchant } from '../middleware/merchant.middleware.js';
+import { validateRequest } from '../middleware/validate.middleware.js';
+import { catalogService } from '../services/catalog.service.js';
+import { BaseController } from '../controllers/base.controller.js';
+
+const router = Router(); const controller = new (class extends BaseController {})();
+const ids = z.object({ id: z.string().cuid(), productId: z.string().cuid(), variantId: z.string().cuid() }).partial();
+const paging = z.object({ page:z.coerce.number().int().min(1).default(1), limit:z.coerce.number().int().min(1).max(100).default(20) });
+const query = paging.extend({ search:z.string().trim().max(200).optional(), category:z.string().trim().max(100).optional(), brand:z.string().trim().max(100).optional(), minPrice:z.coerce.number().nonnegative().optional(), maxPrice:z.coerce.number().nonnegative().optional(), availability:z.coerce.boolean().optional(), discount:z.coerce.boolean().optional(), isFeatured:z.coerce.boolean().optional(), isBestSeller:z.coerce.boolean().optional(), sort:z.enum(['createdAt','price','name']).default('createdAt'), order:z.enum(['asc','desc']).default('desc') }).refine(v => v.maxPrice === undefined || v.minPrice === undefined || v.maxPrice >= v.minPrice,{message:'maxPrice must be greater than minPrice'});
+const variant = z.object({ sku:z.string().trim().min(1).max(100), name:z.string().trim().min(1).max(200), price:z.coerce.number().nonnegative(), attributes:z.record(z.unknown()).optional(), status:z.enum(['ACTIVE','INACTIVE','ARCHIVED','DRAFT']).optional() });
+const create = z.object({ name:z.string().trim().min(1).max(255), sku:z.string().trim().min(1).max(100), price:z.coerce.number().nonnegative(), currency:z.string().regex(/^[A-Z]{3}$/).default('INR'), description:z.string().max(10000), brand:z.string().trim().min(1).max(100), categoryId:z.string().cuid().optional(), category:z.string().max(100).optional(), slug:z.string().max(255).optional(), images:z.array(z.string().url()).max(20).optional(), tags:z.array(z.string().max(50)).max(20).optional(), compareAtPrice:z.coerce.number().nonnegative().optional(), inventory:z.object({ quantity:z.coerce.number().int().min(0), lowStockThreshold:z.coerce.number().int().min(0).optional() }), variants:z.array(variant).max(100).optional() });
+const update = create.omit({ sku:true, currency:true, inventory:true, variants:true }).partial();
+const inventory = z.object({ quantity:z.coerce.number().int().min(0).optional(), lowStockThreshold:z.coerce.number().int().min(0).optional(), availability:z.enum(['AVAILABLE','RESERVED','OUT_OF_STOCK']).optional() }).refine(v=>Object.keys(v).length>0,{message:'At least one inventory field is required'});
+const run = (fn: (req:any)=>Promise<unknown>, status=200) => async (req:any,res:any,next:any) => { try { controller['sendSuccess'](res,await fn(req),undefined,status); } catch(e) { next(e); } };
+router.get('/', authenticate, resolveMerchant, validateRequest({query}), run(req=>catalogService.listProducts(req.merchantId,req.query)));
+router.get('/:id', authenticate, resolveMerchant, validateRequest({params:ids.pick({id:true})}), run(req=>catalogService.getProduct(req.merchantId,req.params.id)));
+router.post('/', authenticate, requireRoles('MERCHANT','ADMIN'), resolveMerchant, validateRequest({body:create}), run(req=>catalogService.createProduct(req.merchantId,req.user.userId,req.body),201));
+router.patch('/:id', authenticate, requireRoles('MERCHANT','ADMIN'), resolveMerchant, validateRequest({params:ids.pick({id:true}),body:update}), run(req=>catalogService.updateProduct(req.merchantId,req.user.userId,req.params.id,req.body)));
+router.patch('/:id/status', authenticate, requireRoles('MERCHANT','ADMIN'), resolveMerchant, validateRequest({params:ids.pick({id:true}),body:z.object({status:z.enum(['ACTIVE','INACTIVE','ARCHIVED'])})}), run(req=>catalogService.setStatus(req.merchantId,req.user.userId,req.params.id,req.body.status)));
+router.get('/:productId/variants', authenticate, resolveMerchant, validateRequest({params:ids.pick({productId:true})}), run(req=>catalogService.variants(req.merchantId,req.params.productId)));
+router.post('/:productId/variants', authenticate, requireRoles('MERCHANT','ADMIN'), resolveMerchant, validateRequest({params:ids.pick({productId:true}),body:variant}), run(req=>catalogService.createVariant(req.merchantId,req.user.userId,req.params.productId,req.body),201));
+router.patch('/:productId/variants/:variantId', authenticate, requireRoles('MERCHANT','ADMIN'), resolveMerchant, validateRequest({params:ids.pick({productId:true,variantId:true}),body:variant.partial()}), run(req=>catalogService.updateVariant(req.merchantId,req.user.userId,req.params.productId,req.params.variantId,req.body)));
+router.get('/:id/inventory', authenticate, resolveMerchant, validateRequest({params:ids.pick({id:true})}), run(req=>catalogService.inventory(req.merchantId,req.params.id)));
+router.patch('/:id/inventory', authenticate, requireRoles('MERCHANT','ADMIN'), resolveMerchant, validateRequest({params:ids.pick({id:true}),body:inventory}), run(req=>catalogService.updateInventory(req.merchantId,req.user.userId,req.params.id,req.body)));
+export const productsRoutes = router;

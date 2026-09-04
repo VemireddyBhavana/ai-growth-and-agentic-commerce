@@ -1,0 +1,5 @@
+export type ShoppingIntent = 'PRODUCT_SEARCH' | 'PRODUCT_COMPARISON' | 'PRODUCT_DETAILS' | 'CATEGORY_BROWSE' | 'BUDGET_SEARCH' | 'RECOMMENDATION' | 'CLARIFICATION_REQUIRED';
+export interface ShoppingRequirements { intent: ShoppingIntent; query: string; category?: string; brand?: string; minPrice?: number; maxPrice?: number; currency: string; requiredAttributes: string[]; preferredAttributes: string[]; excludedAttributes: string[]; useCase?: string; quantity?: number; availabilityRequired: boolean; valueIntent?: 'PREMIUM'|'BUDGET'|'VALUE'; }
+export interface AiCatalogProduct { id:string; name:string; description:string|null; brand:string|null; price:number; currency:string; category:string|null; tags:string[]; available:boolean; }
+export interface RankedRecommendation { productId:string; rank:number; confidence:number; reason:string; matchedPreferences:string[]; }
+export interface AiProvider { extractRequirements(message:string): Promise<ShoppingRequirements>; rankProducts(requirements:ShoppingRequirements, products:AiCatalogProduct[]): Promise<RankedRecommendation[]>; }
