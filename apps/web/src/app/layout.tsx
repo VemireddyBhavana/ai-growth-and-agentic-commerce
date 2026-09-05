@@ -97,6 +97,22 @@ export default async function RootLayout({
       data-scroll-behavior="smooth"
       className={`${inter.variable} ${outfit.variable} ${jetbrainsMono.variable}`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (typeof window !== 'undefined') {
+                window.addEventListener('error', function(e) {
+                  if (e && e.message && (e.message.includes('startTime') || e.message.includes('reportAllChanges'))) {
+                    e.stopImmediatePropagation();
+                    e.preventDefault();
+                  }
+                }, true);
+              }
+            `,
+          }}
+        />
+      </head>
       <body className="min-h-screen bg-background font-sans text-foreground antialiased selection:bg-brand-600 selection:text-white">
         <AppProviders initialSession={initialSession}>{children}</AppProviders>
       </body>
