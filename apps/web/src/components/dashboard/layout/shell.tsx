@@ -26,10 +26,14 @@ export function DashboardShell({ children, merchantName }: DashboardShellProps) 
 
   React.useEffect(() => {
     if (pathname.includes('/assistant')) setActiveNav('ai-assistant');
+    else if (pathname.includes('/products')) setActiveNav('products');
     else if (pathname.includes('/orders')) setActiveNav('orders');
+    else if (pathname.includes('/customers')) setActiveNav('customers');
     else if (pathname.includes('/analytics')) setActiveNav('analytics');
     else if (pathname.includes('/audit')) setActiveNav('audit-trail');
-    else if (pathname.includes('/checkout')) setActiveNav('payments');
+    else if (pathname.includes('/payments') || pathname.includes('/checkout'))
+      setActiveNav('payments');
+    else if (pathname.includes('/settings')) setActiveNav('settings');
     else setActiveNav('dashboard');
   }, [pathname]);
 
@@ -41,12 +45,16 @@ export function DashboardShell({ children, merchantName }: DashboardShellProps) 
         router.push('/dashboard');
         break;
       case 'ai-assistant':
-      case 'products':
         router.push('/assistant');
         break;
+      case 'products':
+        router.push('/products');
+        break;
       case 'orders':
-      case 'customers':
         router.push('/orders');
+        break;
+      case 'customers':
+        router.push('/customers');
         break;
       case 'analytics':
         router.push('/analytics');
@@ -55,9 +63,13 @@ export function DashboardShell({ children, merchantName }: DashboardShellProps) 
         router.push('/audit');
         break;
       case 'payments':
-        router.push('/checkout');
+        router.push('/payments');
+        break;
+      case 'settings':
+        router.push('/settings');
         break;
       default:
+        router.push('/dashboard');
         break;
     }
   };
@@ -105,7 +117,7 @@ export function DashboardShell({ children, merchantName }: DashboardShellProps) 
       <div
         className={cn(
           'transition-[padding] duration-300 ease-out',
-          collapsed ? 'md:pl-[4.5rem]' : 'md:pl-64',
+          collapsed ? 'md:pl-[4.5rem]' : 'md:pl-64'
         )}
       >
         <DashboardNavbar

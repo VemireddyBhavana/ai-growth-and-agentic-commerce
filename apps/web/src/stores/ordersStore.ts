@@ -1,116 +1,13 @@
 import { create } from 'zustand';
+import { toast } from 'sonner';
 import type { Order, OrderStatus } from '@/types/orders';
 import { apiClient } from '@/lib/api-client';
 
-const mockOrders: Order[] = [
-  {
-    id: 'ORD-2026-8901',
-    customerId: 'CUST-001',
-    customerName: 'Sarah Jenkins',
-    customerEmail: 'sarah.j@example.com',
-    date: new Date().toISOString(),
-    items: [
-      { id: '1', name: 'Premium Wireless Headphones', price: 299, quantity: 1 },
-      { id: '2', name: 'Ergonomic Desk Chair', price: 199, quantity: 1 }
-    ],
-    subtotal: 498,
-    tax: 49.8,
-    shipping: 0,
-    discount: 50,
-    total: 497.8,
-    status: 'delivered',
-    paymentDetails: {
-      razorpayOrderId: 'order_KjU8YhY',
-      razorpayPaymentId: 'pay_KjU9ZmY',
-      transactionTime: new Date(Date.now() - 86400000).toISOString(),
-      method: 'Credit Card',
-      verificationStatus: 'verified',
-      status: 'completed'
-    },
-    shippingAddress: {
-      fullName: 'Sarah Jenkins',
-      street: '445 Tech Park Way',
-      city: 'San Francisco',
-      state: 'CA',
-      zip: '94105',
-      country: 'USA'
-    },
-    billingAddress: {
-      fullName: 'Sarah Jenkins',
-      street: '445 Tech Park Way',
-      city: 'San Francisco',
-      state: 'CA',
-      zip: '94105',
-      country: 'USA'
-    },
-    timeline: [
-      { id: 't1', status: 'Order Created', description: 'Order placed successfully', timestamp: new Date(Date.now() - 172800000).toISOString(), completed: true },
-      { id: 't2', status: 'Payment Successful', description: 'Payment verified via Razorpay', timestamp: new Date(Date.now() - 172700000).toISOString(), completed: true },
-      { id: 't3', status: 'Packed', description: 'Order packed and ready for dispatch', timestamp: new Date(Date.now() - 86400000).toISOString(), completed: true },
-      { id: 't4', status: 'Shipped', description: 'Handed over to delivery partner', timestamp: new Date(Date.now() - 43200000).toISOString(), completed: true },
-      { id: 't5', status: 'Delivered', description: 'Delivered to customer', timestamp: new Date().toISOString(), completed: true }
-    ],
-    aiRecommendation: {
-      productsRecommended: ['Ergonomic Desk Chair', 'Premium Wireless Headphones'],
-      confidenceScore: 92,
-      reason: 'Customer viewed both items during the session and spends 8+ hours at a desk.',
-      bundleSuggestions: ['Wireless Mouse', 'Keyboard Pad'],
-      estimatedSavings: 50,
-      explainabilitySummary: 'AI identified a high intent for home office setup and bundled items with a dynamic 10% discount to secure the conversion.'
-    },
-    couponApplied: 'HOME_OFFICE_10',
-    refundStatus: 'none'
-  },
-  {
-    id: 'ORD-2026-8902',
-    customerId: 'CUST-002',
-    customerName: 'Michael Chen',
-    customerEmail: 'm.chen@example.com',
-    date: new Date(Date.now() - 432000000).toISOString(),
-    items: [
-      { id: '3', name: '4K Ultra HD Monitor', price: 450, quantity: 1 }
-    ],
-    subtotal: 450,
-    tax: 45,
-    shipping: 15,
-    discount: 0,
-    total: 510,
-    status: 'refunded',
-    paymentDetails: {
-      razorpayOrderId: 'order_LkU8YhZ',
-      razorpayPaymentId: 'pay_LkU9Zma',
-      transactionTime: new Date(Date.now() - 432000000).toISOString(),
-      method: 'UPI',
-      verificationStatus: 'verified',
-      status: 'refunded'
-    },
-    shippingAddress: {
-      fullName: 'Michael Chen',
-      street: '128 Innovation Dr',
-      city: 'Austin',
-      state: 'TX',
-      zip: '78701',
-      country: 'USA'
-    },
-    billingAddress: {
-      fullName: 'Michael Chen',
-      street: '128 Innovation Dr',
-      city: 'Austin',
-      state: 'TX',
-      zip: '78701',
-      country: 'USA'
-    },
-    timeline: [
-      { id: 't1', status: 'Order Created', description: 'Order placed successfully', timestamp: new Date(Date.now() - 432000000).toISOString(), completed: true },
-      { id: 't2', status: 'Payment Successful', description: 'Payment verified via Razorpay', timestamp: new Date(Date.now() - 431900000).toISOString(), completed: true },
-      { id: 't3', status: 'Refund Requested', description: 'Customer requested refund (Defective product)', timestamp: new Date(Date.now() - 86400000).toISOString(), completed: true },
-      { id: 't4', status: 'Refund Processed', description: 'Amount credited back to original payment source', timestamp: new Date().toISOString(), completed: true }
-    ],
-    refundStatus: 'completed',
-    refundAmount: 510,
-    refundReason: 'Defective product on arrival'
-  }
-];
+const STORE_ID =
+  (typeof process !== 'undefined' ? (process.env as any)?.NEXT_PUBLIC_STORE_ID : undefined) ||
+  'acme-retail';
+
+// No mock data — store fetches exclusively from the real API.
 
 interface OrdersState {
   orders: Order[];
@@ -119,87 +16,146 @@ interface OrdersState {
   dateFilter: 'today' | '7days' | '30days' | 'all';
   sortBy: 'newest' | 'oldest' | 'highest_amount' | 'lowest_amount';
   isLoading: boolean;
-  
+  error: string | null;
+
   fetchOrders: () => Promise<void>;
   setSearchQuery: (query: string) => void;
   setStatusFilter: (status: OrderStatus | 'all') => void;
   setDateFilter: (filter: 'today' | '7days' | '30days' | 'all') => void;
   setSortBy: (sort: 'newest' | 'oldest' | 'highest_amount' | 'lowest_amount') => void;
   requestRefund: (orderId: string, reason: string) => void;
-  
+
   getFilteredAndSortedOrders: () => Order[];
-  getOrderStats: () => { total: number; completed: number; pending: number; cancelled: number; refunded: number; revenue: number };
+  getOrderStats: () => {
+    total: number;
+    completed: number;
+    pending: number;
+    cancelled: number;
+    refunded: number;
+    revenue: number;
+  };
+}
+
+function mapApiOrder(o: any, idx: number): Order {
+  const items = Array.isArray(o.items)
+    ? o.items.map((i: any, j: number) => ({
+        id: String(i.id ?? j + 1),
+        name: String(i.productName ?? i.name ?? i.product?.name ?? 'Product'),
+        price: Number(i.price ?? i.unitPrice ?? 0),
+        quantity: Number(i.quantity ?? 1),
+      }))
+    : [];
+
+  const rawStatus = String(o.status ?? 'processing').toLowerCase();
+  const subtotal = Number(o.subtotal ?? o.totalAmount ?? 0);
+  const tax = Number(o.tax ?? 0);
+  const shipping = Number(o.shipping ?? 0);
+  const discount = Number(o.discount ?? 0);
+  const total = Number(o.total ?? o.totalAmount ?? subtotal + tax + shipping - discount);
+
+  const pay = o.payment ?? o.paymentDetails ?? {};
+  const timeline =
+    Array.isArray(o.timeline) && o.timeline.length
+      ? o.timeline
+      : [
+          {
+            id: 't1',
+            status: 'Order Created',
+            description: 'Order created',
+            timestamp: String(o.createdAt ?? new Date().toISOString()),
+            completed: true,
+          },
+        ];
+  const ship =
+    o.shippingAddress && typeof o.shippingAddress === 'object'
+      ? o.shippingAddress
+      : {
+          fullName: o.customerName || 'Customer',
+          street: 'Standard Delivery',
+          city: 'Bengaluru',
+          state: 'KA',
+          zip: '560001',
+          country: 'India',
+        };
+  const bill = o.billingAddress && typeof o.billingAddress === 'object' ? o.billingAddress : ship;
+  void idx;
+  const validStatus: OrderStatus =
+    rawStatus === 'confirmed' || rawStatus === 'packed'
+      ? 'processing'
+      : rawStatus === 'out_for_delivery'
+        ? 'shipped'
+        : ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'].includes(
+              rawStatus
+            )
+          ? (rawStatus as OrderStatus)
+          : 'processing';
+
+  return {
+    id: String(o.id ?? o.orderNumber ?? `ORD-${Date.now()}-${idx}`),
+    customerId: String(o.customerId ?? 'CUST-001'),
+    customerName: String(o.customerName ?? o.customer?.name ?? 'Customer'),
+    customerEmail: String(o.customerEmail ?? o.customer?.email ?? 'customer@example.com'),
+    date: String(o.createdAt ?? o.date ?? new Date().toISOString()),
+    items,
+    subtotal,
+    tax,
+    shipping,
+    discount,
+    total,
+    status: validStatus,
+    paymentDetails: {
+      razorpayOrderId: String(pay.razorpayOrderId ?? pay.providerOrderId ?? ''),
+      razorpayPaymentId: String(pay.razorpayPaymentId ?? pay.providerPaymentId ?? ''),
+      transactionTime: String(
+        pay.verifiedAt ?? pay.transactionTime ?? o.paidAt ?? o.createdAt ?? new Date().toISOString()
+      ),
+      method: String(pay.method ?? o.paymentMethod ?? 'Razorpay'),
+      verificationStatus:
+        String(pay.status) === 'CAPTURED' ||
+        String(pay.status) === 'COMPLETED' ||
+        o.paymentStatus === 'PAID'
+          ? 'verified'
+          : 'pending',
+      status: String(pay.status ?? o.paymentStatus ?? 'pending').toLowerCase() as any,
+    },
+    shippingAddress: ship,
+    billingAddress: bill,
+    timeline,
+    refundStatus: 'none',
+  };
 }
 
 export const useOrdersStore = create<OrdersState>((set, get) => ({
-  orders: mockOrders,
+  orders: [],
   searchQuery: '',
   statusFilter: 'all',
   dateFilter: 'all',
   sortBy: 'newest',
   isLoading: false,
+  error: null,
 
   fetchOrders: async () => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
-      const response = await apiClient.get('/orders');
-      const data = response.data?.data || response.data;
-      if (Array.isArray(data) && data.length > 0) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const mappedOrders: Order[] = data.map((o: any) => ({
-          id: String(o.id || o.orderId || `ORD-${Date.now()}`),
-          customerId: String(o.customerId || 'CUST-001'),
-          customerName: String(o.customerName || o.customer?.name || 'Customer'),
-          customerEmail: String(o.customerEmail || o.customer?.email || 'customer@example.com'),
-          date: String(o.createdAt || o.date || new Date().toISOString()),
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          items: (Array.isArray(o.items) ? o.items : []).map((i: any, idx: number) => ({
-            id: String(i.id || idx + 1),
-            name: String(i.productName || i.name || i.product?.name || 'Product'),
-            price: Number(i.price || i.unitPrice || 0),
-            quantity: Number(i.quantity || 1),
-          })),
-          subtotal: Number(o.subtotal || o.totalAmount || 0),
-          tax: Number(o.tax || 0),
-          shipping: Number(o.shipping || 0),
-          discount: Number(o.discount || 0),
-          total: Number(o.total || o.totalAmount || 0),
-          status: (o.status || 'processing').toLowerCase() as OrderStatus,
-          paymentDetails: {
-            razorpayOrderId: o.razorpayOrderId || o.paymentDetails?.razorpayOrderId,
-            razorpayPaymentId: o.razorpayPaymentId || o.paymentDetails?.razorpayPaymentId,
-            transactionTime: o.paidAt || o.createdAt || new Date().toISOString(),
-            method: o.paymentMethod || 'Razorpay',
-            verificationStatus: o.paymentStatus === 'PAID' || o.status === 'PAID' ? 'verified' : 'pending',
-            status: o.paymentStatus === 'PAID' || o.status === 'PAID' ? 'completed' : 'pending',
-          },
-          shippingAddress: o.shippingAddress || {
-            fullName: o.customerName || 'Customer',
-            street: 'Standard Delivery',
-            city: 'Bengaluru',
-            state: 'KA',
-            zip: '560001',
-            country: 'India',
-          },
-          billingAddress: o.billingAddress || {
-            fullName: o.customerName || 'Customer',
-            street: 'Standard Delivery',
-            city: 'Bengaluru',
-            state: 'KA',
-            zip: '560001',
-            country: 'India',
-          },
-          timeline: o.timeline || [
-            { id: 't1', status: 'Order Created', description: 'Order created', timestamp: o.createdAt || new Date().toISOString(), completed: true },
-          ],
-          refundStatus: 'none',
-        }));
-        set({ orders: mappedOrders, isLoading: false });
-      } else {
-        set({ isLoading: false });
-      }
-    } catch {
-      set({ isLoading: false });
+      const response = await apiClient.get('/orders', {
+        params: { page: 1, limit: 100 },
+        headers: { 'x-store-id': STORE_ID },
+      });
+      const payload = response?.data?.data ?? response?.data;
+      const list = Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.items)
+          ? payload.items
+          : Array.isArray(payload?.orders)
+            ? payload.orders
+            : [];
+      const mapped = list.map(mapApiOrder);
+      set({ orders: mapped, isLoading: false, error: null });
+    } catch (err: any) {
+      const msg = err?.response?.data?.error?.message || err?.message || 'Could not load orders';
+      set({ isLoading: false, error: msg });
+      if (typeof window !== 'undefined')
+        toast.warning(msg + ' — connect the API backend to see real orders');
     }
   },
 
@@ -208,56 +164,49 @@ export const useOrdersStore = create<OrdersState>((set, get) => ({
   setDateFilter: (filter) => set({ dateFilter: filter }),
   setSortBy: (sort) => set({ sortBy: sort }),
 
-  requestRefund: (orderId, reason) => set((state) => ({
-    orders: state.orders.map(order => 
-      order.id === orderId 
-        ? { ...order, refundStatus: 'requested' as const, refundReason: reason }
-        : order
-    )
-  })),
+  requestRefund: (orderId, reason) =>
+    set((state) => ({
+      orders: state.orders.map((order) =>
+        order.id === orderId ? { ...order, refundStatus: 'requested', refundReason: reason } : order
+      ),
+    })),
 
   getFilteredAndSortedOrders: () => {
     const { orders, searchQuery, statusFilter, dateFilter, sortBy } = get();
-    
     let filtered = [...orders];
-
-    // Search
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      filtered = filtered.filter(o => 
-        o.id.toLowerCase().includes(q) || 
-        o.customerName.toLowerCase().includes(q) ||
-        o.items.some(i => i.name.toLowerCase().includes(q))
+      filtered = filtered.filter(
+        (o) =>
+          o.id.toLowerCase().includes(q) ||
+          o.customerName.toLowerCase().includes(q) ||
+          o.items.some((i) => i.name.toLowerCase().includes(q))
       );
     }
-
-    // Status Filter
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(o => o.status === statusFilter);
+      filtered = filtered.filter((o) => o.status === statusFilter);
     }
-
-    // Date Filter
     const now = Date.now();
-    if (dateFilter === 'today') {
-      filtered = filtered.filter(o => now - new Date(o.date).getTime() <= 86400000);
-    } else if (dateFilter === '7days') {
-      filtered = filtered.filter(o => now - new Date(o.date).getTime() <= 7 * 86400000);
-    } else if (dateFilter === '30days') {
-      filtered = filtered.filter(o => now - new Date(o.date).getTime() <= 30 * 86400000);
-    }
+    if (dateFilter === 'today')
+      filtered = filtered.filter((o) => now - new Date(o.date).getTime() <= 86400000);
+    else if (dateFilter === '7days')
+      filtered = filtered.filter((o) => now - new Date(o.date).getTime() <= 7 * 86400000);
+    else if (dateFilter === '30days')
+      filtered = filtered.filter((o) => now - new Date(o.date).getTime() <= 30 * 86400000);
 
-    // Sort
     filtered.sort((a, b) => {
       switch (sortBy) {
-        case 'oldest': return new Date(a.date).getTime() - new Date(b.date).getTime();
-        case 'highest_amount': return b.total - a.total;
-        case 'lowest_amount': return a.total - b.total;
+        case 'oldest':
+          return new Date(a.date).getTime() - new Date(b.date).getTime();
+        case 'highest_amount':
+          return b.total - a.total;
+        case 'lowest_amount':
+          return a.total - b.total;
         case 'newest':
         default:
           return new Date(b.date).getTime() - new Date(a.date).getTime();
       }
     });
-
     return filtered;
   },
 
@@ -269,17 +218,22 @@ export const useOrdersStore = create<OrdersState>((set, get) => ({
       pending: 0,
       cancelled: 0,
       refunded: 0,
-      revenue: 0
+      revenue: 0,
     };
-
-    orders.forEach(o => {
-      if (o.status === 'delivered') stats.completed++;
-      if (o.status === 'pending' || o.status === 'processing' || o.status === 'shipped') stats.pending++;
+    orders.forEach((o) => {
+      if (
+        o.status === 'delivered' ||
+        o.status === 'processing' ||
+        o.status === 'shipped' ||
+        o.status === 'pending'
+      ) {
+        if (o.status === 'delivered') stats.completed++;
+        else stats.pending++;
+      }
       if (o.status === 'cancelled') stats.cancelled++;
       if (o.status === 'refunded') stats.refunded++;
       if (o.status !== 'cancelled' && o.status !== 'refunded') stats.revenue += o.total;
     });
-
     return stats;
-  }
+  },
 }));

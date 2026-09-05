@@ -1,34 +1,48 @@
 'use client';
 import React from 'react';
+import { ProtectedRoute } from '@/components/auth/protected-route';
+import { DashboardShell, SectionHeader } from '@/components/dashboard';
 import { AuditStats } from '@/components/audit/AuditStats';
 import { AuditFilterBar } from '@/components/audit/AuditFilterBar';
 import { AuditTable } from '@/components/audit/AuditTable';
 import { ExportControls } from '@/components/audit/ExportControls';
-import { ShieldAlert } from 'lucide-react';
+import { useAuditStore } from '@/stores/auditStore';
+import { motion } from 'framer-motion';
+import { ShieldCheck } from 'lucide-react';
+
+function AuditContent() {
+  const fetchEvents = useAuditStore((state) => state.fetchEvents);
+
+  React.useEffect(() => {
+    void fetchEvents();
+  }, [fetchEvents]);
+
+  return (
+    <div className="space-y-6 sm:space-y-8">
+      <SectionHeader
+        eyebrow="Security & Compliance"
+        title="AI Audit Trail"
+        subtitle="Trace, verify, and explain every AI decision and payment action securely."
+        action={
+          <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}>
+            <ExportControls />
+          </motion.div>
+        }
+      />
+
+      <AuditStats />
+      <AuditFilterBar />
+      <AuditTable />
+    </div>
+  );
+}
 
 export default function AuditPage() {
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 space-y-4 md:space-y-0">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-violet-500/20 rounded-xl flex items-center justify-center">
-              <ShieldAlert className="w-6 h-6 text-violet-400" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60">
-                AI Audit Trail
-              </h1>
-              <p className="text-white/60 mt-1">Trace, verify, and explain every system action securely.</p>
-            </div>
-          </div>
-          <ExportControls />
-        </div>
-
-        <AuditStats />
-        <AuditFilterBar />
-        <AuditTable />
-      </div>
-    </div>
+    <ProtectedRoute>
+      <DashboardShell merchantName="Acme Retail">
+        <AuditContent />
+      </DashboardShell>
+    </ProtectedRoute>
   );
 }

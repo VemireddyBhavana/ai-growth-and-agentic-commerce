@@ -20,6 +20,14 @@ const ctrl = new (class extends BaseController {})();
 
 // ─── Schemas ─────────────────────────────────────────────────────────────────
 
+const listQuery = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(25),
+  status: z.string().optional(),
+  method: z.string().optional(),
+  search: z.string().trim().max(200).optional(),
+});
+
 const createOrderSchema = z
   .object({
     orderId: z.string().cuid(),
@@ -50,6 +58,15 @@ const run =
 
 // ─── Authenticated Endpoints ─────────────────────────────────────────────────
 
+router.get(
+  '/',
+  authenticate,
+  requireRoles('MERCHANT', 'ADMIN'),
+  resolveMerchant,
+  validateRequest({ query: listQuery }),
+  run((req) => paymentService.listPayments(req.merchantId, req.query as any))
+);
+
 // Create Razorpay order — only orderId accepted, amount comes from DB
 router.post(
   '/create-order',
@@ -58,8 +75,7 @@ router.post(
   resolveMerchant,
   validateRequest({ body: createOrderSchema }),
   run(
-    (req) =>
-      paymentService.createPaymentOrder(req.merchantId, req.user.userId, req.body.orderId),
+    (req) => paymentService.createPaymentOrder(req.merchantId, req.user.userId, req.body.orderId),
     201
   )
 );

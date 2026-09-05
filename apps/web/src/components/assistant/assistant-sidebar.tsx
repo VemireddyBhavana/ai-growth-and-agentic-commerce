@@ -49,17 +49,17 @@ export const AssistantSidebar: React.FC<AssistantSidebarProps> = ({ onCloseMobil
       <div className="space-y-6">
         {/* Brand Header */}
         <div className="flex items-center justify-between pt-1">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-violet-600 via-indigo-600 to-purple-500 p-0.5 shadow-md shadow-violet-500/30 flex items-center justify-center shrink-0">
+          <Link href="/dashboard" className="flex items-center gap-2.5 group cursor-pointer">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-violet-600 via-indigo-600 to-purple-500 p-0.5 shadow-md shadow-violet-500/30 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
               <Sparkles className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h2 className="font-heading font-bold text-sm text-white tracking-tight leading-none">
+              <h2 className="font-heading font-bold text-sm text-white tracking-tight leading-none group-hover:text-violet-300 transition-colors">
                 Ai Sales Assistant
               </h2>
               <p className="text-[10px] text-zinc-400 mt-0.5">Your Smart Shopping Concierge</p>
             </div>
-          </div>
+          </Link>
 
           {onCloseMobile && (
             <button
@@ -76,26 +76,24 @@ export const AssistantSidebar: React.FC<AssistantSidebarProps> = ({ onCloseMobil
         {/* Navigation Menu */}
         <nav className="space-y-1">
           {/* 1. Chat Assistant (Active) */}
-          <button
-            type="button"
+          <Link
+            href="/assistant"
+            onClick={() => onCloseMobile?.()}
             className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-[#635BFF] text-white shadow-md shadow-violet-600/30 transition-all cursor-pointer"
           >
             <MessageSquare className="w-4 h-4" />
             <span>Chat Assistant</span>
-          </button>
+          </Link>
 
           {/* 2. Products */}
-          <button
-            type="button"
-            onClick={() => {
-              if (savedProducts.length > 0) openProductModal(savedProducts[0]);
-              if (onCloseMobile) onCloseMobile();
-            }}
+          <Link
+            href="/products"
+            onClick={() => onCloseMobile?.()}
             className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
           >
             <Package className="w-4 h-4" />
             <span>Products</span>
-          </button>
+          </Link>
 
           {/* 3. Orders */}
           <Link
@@ -128,17 +126,14 @@ export const AssistantSidebar: React.FC<AssistantSidebarProps> = ({ onCloseMobil
           </Link>
 
           {/* 6. Settings */}
-          <button
-            type="button"
-            onClick={() => {
-              setSettingsModalOpen(true);
-              if (onCloseMobile) onCloseMobile();
-            }}
+          <Link
+            href="/settings"
+            onClick={() => onCloseMobile?.()}
             className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
           >
             <Settings className="w-4 h-4" />
             <span>Settings</span>
-          </button>
+          </Link>
         </nav>
       </div>
 

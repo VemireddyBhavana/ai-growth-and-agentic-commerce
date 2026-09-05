@@ -45,33 +45,27 @@ function SectionReveal({
 
 // ── Section Header ───────────────────────────────
 
-function SectionTitle({
-  title,
-  subtitle,
-}: {
-  title: string;
-  subtitle: string;
-}) {
+function SectionTitle({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <div className="mb-4">
-      <h2 className="font-heading font-bold text-lg text-foreground">
-        {title}
-      </h2>
+      <h2 className="font-heading font-bold text-lg text-foreground">{title}</h2>
       <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
     </div>
   );
 }
 
-// ── Analytics Content ────────────────────────────
+import { useAnalyticsStore } from '@/stores/analyticsStore';
 
 function AnalyticsContent() {
+  const fetchAnalytics = useAnalyticsStore((s) => s.fetchAnalytics);
   const [isReady, setIsReady] = React.useState(false);
 
-  // Simulate initial data load
+  // Fetch real analytics data on mount
   React.useEffect(() => {
-    const timer = setTimeout(() => setIsReady(true), 600);
+    void fetchAnalytics();
+    const timer = setTimeout(() => setIsReady(true), 300);
     return () => clearTimeout(timer);
-  }, []);
+  }, [fetchAnalytics]);
 
   if (!isReady) {
     return <AnalyticsPageSkeleton />;

@@ -1,14 +1,17 @@
 'use client';
 import React, { useState } from 'react';
+import { ProtectedRoute } from '@/components/auth/protected-route';
+import { DashboardShell, SectionHeader } from '@/components/dashboard';
 import { useOrdersStore } from '@/stores/ordersStore';
 import { OrdersStats } from '@/components/orders/OrdersStats';
 import { OrdersFilterBar } from '@/components/orders/OrdersFilterBar';
 import { OrdersTable } from '@/components/orders/OrdersTable';
 import { InvoiceModal } from '@/components/orders/InvoiceModal';
+import { motion } from 'framer-motion';
 import { PackageSearch } from 'lucide-react';
 import type { Order } from '@/types/orders';
 
-export default function OrdersPage() {
+function OrdersContent() {
   const fetchOrders = useOrdersStore((state) => state.fetchOrders);
   const [invoiceOrder, setInvoiceOrder] = useState<Order | null>(null);
 
@@ -17,25 +20,25 @@ export default function OrdersPage() {
   }, [fetchOrders]);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-0 sm:space-x-3 mb-6 sm:mb-8">
-          <div className="w-12 h-12 bg-violet-500/20 rounded-xl flex items-center justify-center shrink-0">
-            <PackageSearch className="w-6 h-6 text-violet-400" />
-          </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60">
-              Orders Management
-            </h1>
-            <p className="text-white/60 mt-0.5 text-sm sm:text-base">View, track, and manage all your orders in one place.</p>
-          </div>
-        </div>
-
-        <OrdersStats />
-        <OrdersFilterBar />
-        <OrdersTable onInvoice={(order) => setInvoiceOrder(order)} />
-      </div>
+    <div className="space-y-6 sm:space-y-8">
+      <SectionHeader
+        eyebrow="Workspace"
+        title="Orders Management"
+        subtitle="View, track, and manage all your orders in one place"
+        action={
+          <motion.button
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-br from-brand-600 to-ai-violet text-white text-[12px] font-semibold border border-white/10 shadow-[0_0_20px_-4px_rgba(99,102,241,0.5)] hover:brightness-110 active:scale-95 transition-all"
+          >
+            <PackageSearch className="w-4 h-4" strokeWidth={2.1} />
+            Export Orders
+          </motion.button>
+        }
+      />
+      <OrdersStats />
+      <OrdersFilterBar />
+      <OrdersTable onInvoice={(order) => setInvoiceOrder(order)} />
 
       {invoiceOrder && (
         <InvoiceModal
@@ -45,5 +48,15 @@ export default function OrdersPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function OrdersPage() {
+  return (
+    <ProtectedRoute>
+      <DashboardShell>
+        <OrdersContent />
+      </DashboardShell>
+    </ProtectedRoute>
   );
 }

@@ -11,7 +11,7 @@
  *   - Signature verification required before any paid state transition
  */
 
-import { Prisma } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '../../config/prisma.config.js';
 import { AppError } from '../../utils/app-error.js';
 import { logger } from '../../utils/logger.js';
@@ -562,10 +562,7 @@ export class PaymentService {
 
     // Do NOT downgrade a captured payment to failed
     if (payment.status === 'CAPTURED' || payment.status === 'COMPLETED') {
-      logger.info(
-        { paymentId: payment.id },
-        'Ignoring payment.failed — payment already captured'
-      );
+      logger.info({ paymentId: payment.id }, 'Ignoring payment.failed — payment already captured');
       return { acknowledged: true, event: 'payment.failed', skipped: true };
     }
 
@@ -649,7 +646,6 @@ export class PaymentService {
       });
     }
 
-    // Return safe payment info — no secrets
     return {
       id: payment.id,
       orderId: payment.orderId,
@@ -666,6 +662,105 @@ export class PaymentService {
       verifiedAt: payment.verifiedAt,
       createdAt: payment.createdAt,
       updatedAt: payment.updatedAt,
+    };
+  }
+
+  // ── LIST PAYMENTS ────────────────────────────────────────────────────────
+
+  async listPayments(
+    storeId: string,
+    query: {
+      page?: number;
+      limit?: number;
+      status?: string;
+      method?: string;
+      search?: string;
+    } = {}
+  ) {
+    const page = Math.max(1, query.page ?? 1);
+    const limit = Math.min(100, Math.max(1, query.limit ?? 25));
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.PaymentWhereInput = { storeId };
+    if (query.status) where.status = query.status as any;
+    if (query.method) where.method = query.method as any;
+    if (query.search) {
+      where.OR = [
+        { providerOrderId: { contains: query.search, mode: 'insensitive' } },
+        { providerPaymentId: { contains: query.search, mode: 'insensitive' } },
+        { order: { orderNumber: { contains: query.search, mode: 'insensitive' } } },
+      ];
+    }
+
+    const [items, total, summary] = await Promise.all([
+      prisma.payment.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          order: {
+            select: {
+              orderNumber: true,
+              status: true,
+              customer: { select: { name: true, email: true, phone: true } },
+            },
+          },
+        },
+      }),
+      prisma.payment.count({ where }),
+      prisma.payment.aggregate({
+        where: { storeId },
+        _sum: { amount: true },
+        _count: { id: true },
+      }),
+    ]);
+
+    const statusTotals: Record<string, number> = {};
+    const statuses = await prisma.payment.groupBy({
+      where: { storeId },
+      by: ['status'],
+      _count: { id: true },
+    });
+    statuses.forEach((row) => {
+      statusTotals[row.status] = row._count.id;
+    });
+
+    return {
+      items: items.map((p) => ({
+        id: p.id,
+        orderId: p.orderId,
+        orderNumber: p.order.orderNumber,
+        customer: p.order.customer
+          ? {
+              name: p.order.customer.name,
+              email: p.order.customer.email,
+              phone: p.order.customer.phone,
+            }
+          : undefined,
+        provider: p.provider,
+        providerOrderId: p.providerOrderId,
+        providerPaymentId: p.providerPaymentId,
+        amount: Number(p.amount),
+        currency: p.currency,
+        status: p.status,
+        method: p.method,
+        failureCode: p.failureCode,
+        failureMessage: p.failureMessage,
+        verifiedAt: p.verifiedAt,
+        createdAt: p.createdAt,
+      })),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+      summary: {
+        totalVolume: Number(summary._sum.amount ?? 0),
+        totalCount: summary._count.id,
+        byStatus: statusTotals,
+      },
     };
   }
 }

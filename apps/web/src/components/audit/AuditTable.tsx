@@ -38,9 +38,34 @@ const RiskBadge: React.FC<{ level: string }> = ({ level }) => {
 };
 
 export const AuditTable: React.FC = () => {
-  const events = useAuditStore((state) => state.getFilteredEvents());
+  const events = useAuditStore((state) => state.events);
+  const searchQuery = useAuditStore((state) => state.searchQuery);
+  const statusFilter = useAuditStore((state) => state.statusFilter);
+  const riskFilter = useAuditStore((state) => state.riskFilter);
 
-  if (events.length === 0) {
+  const filteredEvents = React.useMemo(() => {
+    let filtered = [...events];
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (e) =>
+          e.id.toLowerCase().includes(q) ||
+          e.user.toLowerCase().includes(q) ||
+          (e.orderId && e.orderId.toLowerCase().includes(q)) ||
+          (e.paymentId && e.paymentId.toLowerCase().includes(q))
+      );
+    }
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter((e) => e.status === statusFilter);
+    }
+    if (riskFilter !== 'all') {
+      filtered = filtered.filter((e) => e.riskLevel === riskFilter);
+    }
+    filtered.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    return filtered;
+  }, [events, searchQuery, statusFilter, riskFilter]);
+
+  if (filteredEvents.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <FileText className="w-16 h-16 text-white/20 mb-4" />
@@ -64,12 +89,12 @@ export const AuditTable: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {events.map((event, idx) => (
-            <motion.tr 
+          {filteredEvents.map((event, idx) => (
+            <motion.tr
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05 }}
-              key={event.id} 
+              key={event.id}
               className="border-b border-white/5 hover:bg-white/[0.02] transition-colors group"
             >
               <td className="p-4 text-sm text-white/70">
@@ -84,7 +109,10 @@ export const AuditTable: React.FC = () => {
                 <StatusBadge status={event.status} />
               </td>
               <td className="p-4 text-right">
-                <Link href={`/audit/${event.id}`} className="text-violet-400 hover:text-violet-300 inline-flex items-center text-sm font-medium transition-colors opacity-100 sm:opacity-80 sm:group-hover:opacity-100">
+                <Link
+                  href={`/audit/${event.id}`}
+                  className="text-violet-400 hover:text-violet-300 inline-flex items-center text-sm font-medium transition-colors opacity-100 sm:opacity-80 sm:group-hover:opacity-100"
+                >
                   View Details
                   <ChevronRight className="w-4 h-4 ml-1" />
                 </Link>

@@ -27,16 +27,32 @@ interface NavLinksProps {
   orientation?: 'horizontal' | 'vertical';
 }
 
+import { usePathname } from 'next/navigation';
+
 export function NavLinks({
   links = DEFAULT_NAV_LINKS,
   onNavigate,
   className = '',
   orientation = 'horizontal',
 }: NavLinksProps) {
-  const [activeHref, setActiveHref] = React.useState<string>('#home');
+  const pathname = usePathname();
+  const [activeHref, setActiveHref] = React.useState<string>(() => {
+    if (pathname === '/dashboard' || pathname.startsWith('/dashboard')) return '/dashboard';
+    return '#home';
+  });
   const [hoveredIndex, setHoveredIndex] = React.useState<number | null>(null);
 
   React.useEffect(() => {
+    if (pathname === '/dashboard' || pathname.startsWith('/dashboard')) {
+      setActiveHref('/dashboard');
+      return;
+    }
+
+    if (pathname !== '/') {
+      setActiveHref(pathname);
+      return;
+    }
+
     const handleScroll = () => {
       const sections = links
         .filter((link) => link.href.startsWith('#'))
@@ -59,10 +75,14 @@ export function NavLinks({
     handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [links]);
+  }, [links, pathname]);
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     if (href.startsWith('#')) {
+      if (pathname !== '/') {
+        // If not on the homepage, let normal Link navigation go to /#section
+        return;
+      }
       e.preventDefault();
       setActiveHref(href);
       const targetId = href.replace('#', '');
@@ -77,19 +97,27 @@ export function NavLinks({
     onNavigate?.(href);
   };
 
+  const resolveHref = (href: string) => {
+    if (href.startsWith('#') && pathname !== '/') {
+      return `/${href}`;
+    }
+    return href;
+  };
+
   if (orientation === 'vertical') {
     return (
       <ul className={`flex flex-col gap-1 ${className}`} role="list">
         {links.map((link) => {
           const isActive = activeHref === link.href;
           const isHash = link.href.startsWith('#');
-          const LinkComponent = isHash ? 'a' : Link;
+          const resolvedTarget = resolveHref(link.href);
+          const LinkComponent = isHash && pathname === '/' ? 'a' : Link;
 
           return (
             <li key={link.label} role="none">
               <LinkComponent
                 role="menuitem"
-                href={link.href}
+                href={resolvedTarget}
                 onClick={(e: React.MouseEvent<HTMLAnchorElement>) => handleClick(e, link.href)}
                 aria-current={isActive ? 'page' : undefined}
                 className={`group relative flex items-center justify-between px-4 py-3 rounded-xl text-base font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/60 ${
@@ -101,7 +129,9 @@ export function NavLinks({
                 <span className="flex items-center gap-2">
                   <span
                     className={`inline-block h-1.5 w-1.5 rounded-full transition-colors duration-200 ${
-                      isActive ? 'bg-brand-500 scale-110' : 'bg-transparent group-hover:bg-muted-foreground/50'
+                      isActive
+                        ? 'bg-brand-500 scale-110'
+                        : 'bg-transparent group-hover:bg-muted-foreground/50'
                     }`}
                   />
                   {link.label}
@@ -142,7 +172,8 @@ export function NavLinks({
         const isActive = activeHref === link.href;
         const isHovered = hoveredIndex === index;
         const isHash = link.href.startsWith('#');
-        const LinkComponent = isHash ? 'a' : Link;
+        const resolvedTarget = resolveHref(link.href);
+        const LinkComponent = isHash && pathname === '/' ? 'a' : Link;
 
         return (
           <div key={link.label} className="relative" role="none">
@@ -156,7 +187,7 @@ export function NavLinks({
             )}
             <LinkComponent
               role="menuitem"
-              href={link.href}
+              href={resolvedTarget}
               onClick={(e: React.MouseEvent<HTMLAnchorElement>) => handleClick(e, link.href)}
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
@@ -164,9 +195,7 @@ export function NavLinks({
               onBlur={() => setHoveredIndex(null)}
               aria-current={isActive ? 'page' : undefined}
               className={`relative z-10 inline-flex items-center gap-1.5 px-3.5 py-1.5 text-sm font-medium rounded-full transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/60 ${
-                isActive
-                  ? 'text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
+                isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {link.label}

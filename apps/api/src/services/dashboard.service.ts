@@ -2,82 +2,107 @@ import { dashboardRepository } from '../repositories/dashboard.repository.js';
 import type { DashboardSnapshot } from '@ai-sales-assistant/types';
 import { AppError } from '../utils/app-error.js';
 
-/**
- * Dashboard Service
- * Business logic for dashboard operations
- */
+const SNAPSHOT_CACHE_TTL_MS = 5000;
+
+class SnapshotCacheEntry {
+  public readonly fetchedAt: number;
+  public readonly promise: Promise<DashboardSnapshot>;
+
+  constructor(promise: Promise<DashboardSnapshot>) {
+    this.fetchedAt = Date.now();
+    this.promise = promise;
+  }
+
+  get isExpired(): boolean {
+    return Date.now() - this.fetchedAt > SNAPSHOT_CACHE_TTL_MS;
+  }
+}
+
 export class DashboardService {
-  /**
-   * Get complete dashboard snapshot for a store
-   */
+  private readonly snapshotCache = new Map<string, SnapshotCacheEntry>();
+
+  private async getOrCreateSnapshot(storeId: string): Promise<DashboardSnapshot> {
+    const existing = this.snapshotCache.get(storeId);
+    if (existing && !existing.isExpired) {
+      return existing.promise;
+    }
+
+    const fresh = new SnapshotCacheEntry(
+      (async () => {
+        try {
+          return await dashboardRepository.getDashboardSnapshot(storeId);
+        } catch (error) {
+          this.snapshotCache.delete(storeId);
+          throw error;
+        }
+      })()
+    );
+    this.snapshotCache.set(storeId, fresh);
+    return fresh.promise;
+  }
+
   async getDashboardSnapshot(storeId: string): Promise<DashboardSnapshot> {
     try {
-      return await dashboardRepository.getDashboardSnapshot(storeId);
+      return await this.getOrCreateSnapshot(storeId);
     } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-      throw new AppError({ message: 'Failed to fetch dashboard data', code: 'DASHBOARD_FETCH_ERROR', statusCode: 500 });
+      if (error instanceof AppError) throw error;
+      throw new AppError({
+        message: 'Failed to fetch dashboard data',
+        code: 'DASHBOARD_FETCH_ERROR',
+        statusCode: 500,
+      });
     }
   }
 
-  /**
-   * Get KPI metrics for a store
-   */
   async getKpiMetrics(storeId: string) {
     try {
-      const snapshot = await dashboardRepository.getDashboardSnapshot(storeId);
-      return snapshot.kpis;
+      return (await this.getOrCreateSnapshot(storeId)).kpis;
     } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-      throw new AppError({ message: 'Failed to fetch KPI metrics', code: 'KPI_FETCH_ERROR', statusCode: 500 });
+      if (error instanceof AppError) throw error;
+      throw new AppError({
+        message: 'Failed to fetch KPI metrics',
+        code: 'KPI_FETCH_ERROR',
+        statusCode: 500,
+      });
     }
   }
 
-  /**
-   * Get revenue data for a store
-   */
   async getRevenueData(storeId: string) {
     try {
-      const snapshot = await dashboardRepository.getDashboardSnapshot(storeId);
-      return snapshot.revenue;
+      return (await this.getOrCreateSnapshot(storeId)).revenue;
     } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-      throw new AppError({ message: 'Failed to fetch revenue data', code: 'REVENUE_FETCH_ERROR', statusCode: 500 });
+      if (error instanceof AppError) throw error;
+      throw new AppError({
+        message: 'Failed to fetch revenue data',
+        code: 'REVENUE_FETCH_ERROR',
+        statusCode: 500,
+      });
     }
   }
 
-  /**
-   * Get recent orders for a store
-   */
   async getRecentOrders(storeId: string) {
     try {
-      const snapshot = await dashboardRepository.getDashboardSnapshot(storeId);
-      return snapshot.recentOrders;
+      return (await this.getOrCreateSnapshot(storeId)).recentOrders;
     } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-      throw new AppError({ message: 'Failed to fetch recent orders', code: 'ORDERS_FETCH_ERROR', statusCode: 500 });
+      if (error instanceof AppError) throw error;
+      throw new AppError({
+        message: 'Failed to fetch recent orders',
+        code: 'ORDERS_FETCH_ERROR',
+        statusCode: 500,
+      });
     }
   }
 
-  /**
-   * Get AI performance metrics for a store
-   */
   async getAiMetrics(storeId: string) {
     try {
-      const snapshot = await dashboardRepository.getDashboardSnapshot(storeId);
-      return snapshot.aiMetrics;
+      return (await this.getOrCreateSnapshot(storeId)).aiMetrics;
     } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-      throw new AppError({ message: 'Failed to fetch AI metrics', code: 'AI_METRICS_FETCH_ERROR', statusCode: 500 });
+      if (error instanceof AppError) throw error;
+      throw new AppError({
+        message: 'Failed to fetch AI metrics',
+        code: 'AI_METRICS_FETCH_ERROR',
+        statusCode: 500,
+      });
     }
   }
 }

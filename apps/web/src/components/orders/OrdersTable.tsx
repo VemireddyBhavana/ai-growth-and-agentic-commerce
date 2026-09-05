@@ -30,7 +30,48 @@ interface OrdersTableProps {
 }
 
 export const OrdersTable: React.FC<OrdersTableProps> = ({ onInvoice }) => {
-  const orders = useOrdersStore((state) => state.getFilteredAndSortedOrders());
+  const orders = useOrdersStore((state) => state.orders);
+  const searchQuery = useOrdersStore((state) => state.searchQuery);
+  const statusFilter = useOrdersStore((state) => state.statusFilter);
+  const dateFilter = useOrdersStore((state) => state.dateFilter);
+  const sortBy = useOrdersStore((state) => state.sortBy);
+
+  const filteredOrders = React.useMemo(() => {
+    let filtered = [...orders];
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (o) =>
+          o.id.toLowerCase().includes(q) ||
+          o.customerName.toLowerCase().includes(q) ||
+          o.items.some((i) => i.name.toLowerCase().includes(q))
+      );
+    }
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter((o) => o.status === statusFilter);
+    }
+    const now = Date.now();
+    if (dateFilter === 'today')
+      filtered = filtered.filter((o) => now - new Date(o.date).getTime() <= 86400000);
+    else if (dateFilter === '7days')
+      filtered = filtered.filter((o) => now - new Date(o.date).getTime() <= 7 * 86400000);
+    else if (dateFilter === '30days')
+      filtered = filtered.filter((o) => now - new Date(o.date).getTime() <= 30 * 86400000);
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'oldest':
+          return new Date(a.date).getTime() - new Date(b.date).getTime();
+        case 'highest_amount':
+          return b.total - a.total;
+        case 'lowest_amount':
+          return a.total - b.total;
+        case 'newest':
+        default:
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
+      }
+    });
+    return filtered;
+  }, [orders, searchQuery, statusFilter, dateFilter, sortBy]);
 
   if (orders.length === 0) {
     return (
@@ -38,7 +79,10 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onInvoice }) => {
         <FileText className="w-16 h-16 text-white/20 mb-4" />
         <h3 className="text-xl font-medium text-white mb-2">No orders found</h3>
         <p className="text-white/60 mb-6">Try adjusting your filters or search query.</p>
-        <Link href="/" className="bg-violet-600 hover:bg-violet-700 text-white px-6 py-2 rounded-lg transition-colors">
+        <Link
+          href="/"
+          className="bg-violet-600 hover:bg-violet-700 text-white px-6 py-2 rounded-lg transition-colors"
+        >
           Start Shopping
         </Link>
       </div>
@@ -73,7 +117,9 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onInvoice }) => {
                 {new Date(order.date).toLocaleDateString()}
               </td>
               <td className="p-4 text-sm text-white/90">{order.customerName}</td>
-              <td className="p-4 text-sm font-medium text-white">₹{order.total.toLocaleString()}</td>
+              <td className="p-4 text-sm font-medium text-white">
+                ₹{order.total.toLocaleString()}
+              </td>
               <td className="p-4 text-sm hidden md:table-cell">
                 <StatusBadge status={order.paymentDetails.status} />
               </td>

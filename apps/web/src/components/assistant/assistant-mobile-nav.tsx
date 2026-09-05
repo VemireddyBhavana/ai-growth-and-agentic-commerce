@@ -1,7 +1,15 @@
 'use client';
 
 import React from 'react';
-import { MessageSquare, Package, Receipt, Rocket, MoreHorizontal, Check, ShieldCheck } from 'lucide-react';
+import {
+  MessageSquare,
+  Package,
+  Receipt,
+  Rocket,
+  MoreHorizontal,
+  Check,
+  ShieldCheck,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useAssistantStore } from '@/stores/use-assistant-store';
 
@@ -40,31 +48,29 @@ export const AssistantMobileNav: React.FC<AssistantMobileNavProps> = ({ onOpenAu
 
       {/* Bottom Navigation Tabs */}
       <nav className="flex items-center justify-around py-2 px-2 bg-white dark:bg-zinc-950">
-        <button
-          type="button"
+        <Link
+          href="/assistant"
           className="flex flex-col items-center gap-1 text-violet-600 dark:text-violet-400 cursor-pointer"
         >
           <MessageSquare className="w-5 h-5 fill-violet-100 dark:fill-violet-950" />
           <span className="text-[11px] font-semibold">Chat</span>
-        </button>
+        </Link>
 
-        <button
-          type="button"
-          onClick={() => useAssistantStore.getState().openProductModal(useAssistantStore.getState().savedProducts[0])}
+        <Link
+          href="/products"
           className="flex flex-col items-center gap-1 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer"
         >
           <Package className="w-5 h-5" />
           <span className="text-[11px] font-medium">Products</span>
-        </button>
+        </Link>
 
-        <button
-          type="button"
-          onClick={() => setOrdersModalOpen(true)}
+        <Link
+          href="/orders"
           className="flex flex-col items-center gap-1 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer"
         >
           <Receipt className="w-5 h-5" />
           <span className="text-[11px] font-medium">Orders</span>
-        </button>
+        </Link>
 
         <Link
           href="/analytics"
@@ -74,14 +80,13 @@ export const AssistantMobileNav: React.FC<AssistantMobileNavProps> = ({ onOpenAu
           <span className="text-[11px] font-medium">Campaigns</span>
         </Link>
 
-        <button
-          type="button"
-          onClick={() => setSettingsModalOpen(true)}
+        <Link
+          href="/settings"
           className="flex flex-col items-center gap-1 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer"
         >
           <MoreHorizontal className="w-5 h-5" />
           <span className="text-[11px] font-medium">More</span>
-        </button>
+        </Link>
       </nav>
     </div>
   );
