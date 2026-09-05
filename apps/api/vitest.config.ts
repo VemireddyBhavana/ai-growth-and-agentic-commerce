@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['tests/**/*.test.ts'],
+    include: ['tests/**/*.test.ts', 'apps/api/tests/**/*.test.ts'],
     env: {
       NODE_ENV: 'test',
       DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/ai_sales_assistant_test?schema=public',
