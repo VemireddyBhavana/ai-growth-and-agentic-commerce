@@ -71,8 +71,8 @@ export const AssistantLayout: React.FC = () => {
 
         {/* 3-Column Workspace (Desktop View in reference screenshot) */}
         <main className="flex-1 min-h-0 flex overflow-hidden relative">
-          {/* Column 1: Top Recommendations (Left, 250px) */}
-          <div className="hidden 2xl:block w-[260px] h-full shrink-0">
+          {/* Column 1: Top Recommendations (Left, 240-260px) */}
+          <div className="hidden lg:block w-[230px] xl:w-[250px] 2xl:w-[260px] h-full shrink-0">
             <TopRecommendationsColumn />
           </div>
 
@@ -84,8 +84,8 @@ export const AssistantLayout: React.FC = () => {
             />
           </div>
 
-          {/* Column 3: Audit Trail & Payment Summary (Right, 280px) */}
-          <div className="hidden xl:block w-[280px] h-full shrink-0">
+          {/* Column 3: Audit Trail & Payment Summary (Right, 260-280px) */}
+          <div className="hidden lg:block w-[250px] xl:w-[270px] 2xl:w-[280px] h-full shrink-0">
             <AuditTrailColumn />
           </div>
         </main>

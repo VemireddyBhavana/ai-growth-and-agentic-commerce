@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   Sparkles,
@@ -14,6 +15,7 @@ import { useSupabase } from '@/lib/auth/supabase/client';
 import { cn } from '@/lib/utils';
 
 export function DashboardWelcome() {
+  const router = useRouter();
   const { session } = useSupabase();
   const user = session?.user;
   const firstName = React.useMemo(() => {
@@ -51,15 +53,17 @@ export function DashboardWelcome() {
               <div className="flex flex-wrap items-center gap-2.5 pt-1">
                 <button
                   type="button"
-                  className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl text-sm font-semibold bg-gradient-to-r from-brand-600 via-brand-500 to-ai-violet text-white shadow-lg shadow-brand-500/20 hover:opacity-95 transition-opacity"
+                  onClick={() => router.push('/assistant')}
+                  className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl text-sm font-semibold bg-gradient-to-r from-brand-600 via-brand-500 to-ai-violet text-white shadow-lg shadow-brand-500/20 hover:opacity-95 transition-opacity cursor-pointer active:scale-95"
                 >
                   <Sparkles className="w-4 h-4" strokeWidth={2.1} />
                   Open AI Concierge
                 </button>
                 <button
                   type="button"
+                  onClick={() => router.push('/analytics')}
                   className={cn(
-                    'inline-flex items-center gap-1.5 h-10 px-4 rounded-xl text-sm font-semibold',
+                    'inline-flex items-center gap-1.5 h-10 px-4 rounded-xl text-sm font-semibold cursor-pointer active:scale-95',
                     'border border-border/70 dark:border-white/10 bg-background/50 dark:bg-obsidian-900/50',
                     'hover:border-brand-500/40 text-foreground transition-colors',
                   )}

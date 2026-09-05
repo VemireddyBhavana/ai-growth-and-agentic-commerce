@@ -55,19 +55,25 @@ export function LiveVisitors() {
         />
         <div className="space-y-2 -mx-1">
           <AnimatePresence mode="popLayout">
-            {visitors.map((v, i) => {
-              const Device = v.device === 'mobile' ? Smartphone : Monitor;
-              const ActIcon = activityIcons[v.activityKind];
-              return (
-                <motion.div
-                  key={v.id}
-                  layout
-                  initial={{ opacity: 0, y: -6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 6 }}
-                  transition={{ duration: 0.3, delay: 0.4 + i * 0.05, ease: [0.22, 1, 0.36, 1] }}
-                  className="group relative flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:border-white/10 hover:bg-background/50 dark:hover:bg-obsidian-950/50 transition-all duration-200"
-                >
+            {visitors.length === 0 ? (
+              <div className="py-8 text-center text-xs text-muted-foreground flex flex-col items-center justify-center gap-2">
+                <Globe className="w-5 h-5 text-ai-cyan/60 animate-pulse" />
+                <p className="font-mono text-[11.5px]">Connecting to real-time storefront stream...</p>
+              </div>
+            ) : (
+              visitors.map((v, i) => {
+                const Device = v.device === 'mobile' ? Smartphone : Monitor;
+                const ActIcon = (v.activityKind && activityIcons[v.activityKind]) || Eye;
+                return (
+                  <motion.div
+                    key={v.id}
+                    layout
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 6 }}
+                    transition={{ duration: 0.3, delay: 0.4 + i * 0.05, ease: [0.22, 1, 0.36, 1] }}
+                    className="group relative flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:border-white/10 hover:bg-background/50 dark:hover:bg-obsidian-950/50 transition-all duration-200"
+                  >
                   <div className="relative shrink-0">
                     <div
                       className={cn(
@@ -113,8 +119,9 @@ export function LiveVisitors() {
                     )}
                   </div>
                 </motion.div>
-              );
-            })}
+                );
+              })
+            )}
           </AnimatePresence>
         </div>
       </GlassCard>

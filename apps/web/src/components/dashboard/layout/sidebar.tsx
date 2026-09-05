@@ -253,7 +253,7 @@ function SidebarBody({
       </nav>
 
       {/* Bottom Actions */}
-      <div className={cn('py-4 border-t border-white/10 space-y-2', collapsed ? 'px-2' : 'px-3')}>
+      <div className={cn('pt-3 pb-8 border-t border-white/10 space-y-2', collapsed ? 'px-2' : 'px-3')}>
         <motion.button
           type="button"
           onClick={onToggleCollapse}
