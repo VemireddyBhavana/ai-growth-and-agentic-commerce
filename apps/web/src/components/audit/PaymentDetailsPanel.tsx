@@ -1,5 +1,5 @@
 import React from 'react';
-import { PaymentAuditDetails } from '@/types/audit';
+import type { PaymentAuditDetails } from '@/types/audit';
 import { CreditCard, Key } from 'lucide-react';
 
 export const PaymentDetailsPanel: React.FC<{ payment: PaymentAuditDetails }> = ({ payment }) => {

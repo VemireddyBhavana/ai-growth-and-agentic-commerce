@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Order, OrderStatus, PaymentStatus } from '@/types/orders';
+import type { Order, OrderStatus } from '@/types/orders';
 import { apiClient } from '@/lib/api-client';
 
 const mockOrders: Order[] = [
@@ -145,17 +145,19 @@ export const useOrdersStore = create<OrdersState>((set, get) => ({
       const response = await apiClient.get('/orders');
       const data = response.data?.data || response.data;
       if (Array.isArray(data) && data.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const mappedOrders: Order[] = data.map((o: any) => ({
-          id: o.id || o.orderId,
-          customerId: o.customerId || 'CUST-001',
-          customerName: o.customerName || o.customer?.name || 'Customer',
-          customerEmail: o.customerEmail || o.customer?.email || 'customer@example.com',
-          date: o.createdAt || o.date || new Date().toISOString(),
-          items: (o.items || []).map((i: any, idx: number) => ({
-            id: i.id || String(idx + 1),
-            name: i.productName || i.name || i.product?.name || 'Product',
+          id: String(o.id || o.orderId || `ORD-${Date.now()}`),
+          customerId: String(o.customerId || 'CUST-001'),
+          customerName: String(o.customerName || o.customer?.name || 'Customer'),
+          customerEmail: String(o.customerEmail || o.customer?.email || 'customer@example.com'),
+          date: String(o.createdAt || o.date || new Date().toISOString()),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          items: (Array.isArray(o.items) ? o.items : []).map((i: any, idx: number) => ({
+            id: String(i.id || idx + 1),
+            name: String(i.productName || i.name || i.product?.name || 'Product'),
             price: Number(i.price || i.unitPrice || 0),
-            quantity: i.quantity || 1,
+            quantity: Number(i.quantity || 1),
           })),
           subtotal: Number(o.subtotal || o.totalAmount || 0),
           tax: Number(o.tax || 0),

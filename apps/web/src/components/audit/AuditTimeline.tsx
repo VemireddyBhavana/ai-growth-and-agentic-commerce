@@ -1,5 +1,5 @@
 import React from 'react';
-import { TimelineStep } from '@/types/audit';
+import type { TimelineStep } from '@/types/audit';
 import { Check, X, Clock, TerminalSquare } from 'lucide-react';
 import { motion } from 'framer-motion';
 

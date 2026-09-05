@@ -83,67 +83,48 @@ export const AssistantChat: React.FC<AssistantChatProps> = ({
 
           <div className="flex items-center gap-2.5">
             <div className="relative">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-violet-600 to-indigo-600 p-0.5 flex items-center justify-center shadow-md">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-600 p-0.5 flex items-center justify-center shadow-md shadow-violet-500/20">
                 <Bot className="w-4 h-4 text-white" />
               </div>
-              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-zinc-950 animate-pulse" />
+              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-zinc-950 animate-pulse" />
             </div>
 
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="font-heading font-bold text-sm text-white tracking-wide">
-                  AI Commerce Concierge
+                <h2 className="font-heading font-bold text-sm text-zinc-900 dark:text-white tracking-wide">
+                  Ai Shopping Assistant
                 </h2>
-                <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.2 rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/25">
-                  <Sparkles className="w-2.5 h-2.5 text-violet-400" />
-                  GPT-4o Agentic
-                </span>
               </div>
-              <p className="text-[10px] text-zinc-400 hidden sm:block">
-                Sub-second multi-attribute discovery & instant checkout
+              <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                <span>Online</span>
               </p>
             </div>
           </div>
         </div>
 
-        {/* Right: Actions */}
+        {/* Right: Refresh & Settings Actions */}
         <div className="flex items-center gap-2">
-          {/* New Chat Button */}
+          {/* Refresh Button */}
           <button
             type="button"
             onClick={handleResetChat}
-            className="p-2 rounded-xl border border-white/10 hover:bg-white/5 text-zinc-400 hover:text-white transition-colors hidden sm:flex items-center gap-1.5 text-xs"
-            title="New Chat"
+            className="p-2 rounded-xl border border-zinc-200 dark:border-white/10 hover:bg-zinc-100 dark:hover:bg-white/5 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
+            title="Refresh Conversation"
+            aria-label="Refresh"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Reset</span>
+            <RotateCcw className="w-4 h-4" />
           </button>
 
-          {/* Cart Trigger */}
+          {/* Settings / Options Button */}
           <button
             type="button"
-            onClick={handleOpenCart}
-            className="p-2 sm:px-3 sm:py-2 rounded-xl border border-white/10 bg-zinc-900/80 hover:bg-zinc-800 text-zinc-200 hover:text-white flex items-center gap-2 transition-all shadow-sm relative active:scale-95"
-            aria-label="Open cart"
+            onClick={() => useAssistantStore.getState().setSettingsModalOpen(true)}
+            className="p-2 rounded-xl border border-zinc-200 dark:border-white/10 hover:bg-zinc-100 dark:hover:bg-white/5 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
+            title="Assistant Settings"
+            aria-label="Settings"
           >
-            <ShoppingBag className="w-4 h-4 text-violet-400" />
-            <span className="hidden sm:inline text-xs font-semibold">Cart</span>
-            {totalCartCount > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold font-mono bg-emerald-500 text-zinc-950 shadow-md">
-                {totalCartCount}
-              </span>
-            )}
-          </button>
-
-          {/* Right Panel Toggle */}
-          <button
-            type="button"
-            onClick={onToggleRightPanel}
-            className="p-2 rounded-xl border border-white/10 hover:bg-white/5 text-zinc-300 hover:text-white transition-colors"
-            title="Toggle AI Insights"
-            aria-label="Toggle AI Insights"
-          >
-            <PanelRight className="w-4 h-4" />
+            <SlidersHorizontal className="w-4 h-4" />
           </button>
         </div>
       </header>

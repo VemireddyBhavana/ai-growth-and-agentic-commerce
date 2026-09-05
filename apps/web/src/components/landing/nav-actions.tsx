@@ -30,14 +30,14 @@ export function NavActions({ className = '', orientation = 'horizontal', onNavig
     return (
       <div className={`flex flex-col gap-3 ${className}`}>
         <Link
-          href="#sign-in"
+          href="/login"
           onClick={onNavigate}
           className="w-full py-2.5 text-center text-sm font-medium text-foreground bg-secondary/80 rounded-xl hover:bg-secondary transition-all duration-200 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/60"
         >
           Sign In
         </Link>
         <Link
-          href="#get-started"
+          href="/register"
           onClick={onNavigate}
           className="group relative w-full py-3 text-center text-sm font-semibold text-white rounded-xl overflow-hidden shadow-lg shadow-brand-600/30 transition-all duration-200 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/60"
         >
@@ -73,14 +73,14 @@ export function NavActions({ className = '', orientation = 'horizontal', onNavig
       )}
 
       <Link
-        href="#sign-in"
+        href="/login"
         className="relative inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground px-3.5 py-2 rounded-full transition-all duration-200 hover:bg-secondary/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/60 active:scale-[0.98]"
       >
         Sign In
       </Link>
 
       <Link
-        href="#get-started"
+        href="/register"
         className="group relative inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold text-white overflow-hidden shadow-md shadow-brand-600/25 transition-all duration-300 hover:shadow-xl hover:shadow-brand-600/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-500 focus-visible:ring-offset-background"
       >
         <span

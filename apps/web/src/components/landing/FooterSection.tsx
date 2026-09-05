@@ -88,16 +88,57 @@ export function FooterSection() {
                 {section.title}
               </h4>
               <ul className="space-y-2">
-                {section.links.map((link, lIdx) => (
-                  <li key={lIdx}>
-                    <Link
-                      href={link.href}
-                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
+                {section.links.map((link, lIdx) => {
+                  const isExternal = link.href.startsWith('http');
+                  const isHash = link.href.startsWith('#');
+
+                  if (isExternal) {
+                    return (
+                      <li key={lIdx}>
+                        <a
+                          href={link.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          {link.label}
+                        </a>
+                      </li>
+                    );
+                  }
+
+                  if (isHash) {
+                    return (
+                      <li key={lIdx}>
+                        <a
+                          href={link.href}
+                          onClick={(e) => {
+                            if (link.href !== '#') {
+                              e.preventDefault();
+                              const targetEl = document.getElementById(link.href.replace('#', ''));
+                              if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth' });
+                              window.history.pushState(null, '', link.href);
+                            }
+                          }}
+                          className="text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                        >
+                          {link.label}
+                        </a>
+                      </li>
+                    );
+                  }
+
+                  return (
+                    <li key={lIdx}>
+                      <Link
+                        href={link.href}
+                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ))}
@@ -111,34 +152,42 @@ export function FooterSection() {
 
           {/* Social Links */}
           <div className="flex items-center gap-4">
-            <Link
+            <a
               href="https://twitter.com"
+              target="_blank"
+              rel="noopener noreferrer"
               aria-label="Twitter"
               className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
             >
               <Twitter className="w-4 h-4" />
-            </Link>
-            <Link
+            </a>
+            <a
               href="https://github.com"
+              target="_blank"
+              rel="noopener noreferrer"
               aria-label="GitHub"
               className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
             >
               <Github className="w-4 h-4" />
-            </Link>
-            <Link
+            </a>
+            <a
               href="https://linkedin.com"
+              target="_blank"
+              rel="noopener noreferrer"
               aria-label="LinkedIn"
               className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
             >
               <Linkedin className="w-4 h-4" />
-            </Link>
-            <Link
+            </a>
+            <a
               href="https://discord.com"
+              target="_blank"
+              rel="noopener noreferrer"
               aria-label="Discord"
               className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
             >
               <Discord className="w-4 h-4" />
-            </Link>
+            </a>
           </div>
         </div>
       </div>

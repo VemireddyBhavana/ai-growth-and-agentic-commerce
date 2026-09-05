@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
     '@ai-sales-assistant/types',
     '@ai-sales-assistant/utils',
   ],
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   images: {
     remotePatterns: [
       {

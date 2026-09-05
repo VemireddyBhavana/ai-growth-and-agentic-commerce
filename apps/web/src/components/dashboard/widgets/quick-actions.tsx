@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   PackagePlus,
@@ -23,6 +24,7 @@ type QuickAction = {
   tone: string;
   hotkey?: string;
   popular?: boolean;
+  href: string;
 };
 
 const quickActions: QuickAction[] = [
@@ -33,6 +35,7 @@ const quickActions: QuickAction[] = [
     icon: PackagePlus,
     tone: 'from-brand-600 via-brand-500 to-ai-violet',
     hotkey: '⌘P',
+    href: '/assistant',
   },
   {
     key: 'launch-campaign',
@@ -42,6 +45,7 @@ const quickActions: QuickAction[] = [
     tone: 'from-ai-violet via-purple-500 to-fuchsia-500',
     hotkey: '⌘M',
     popular: true,
+    href: '/analytics',
   },
   {
     key: 'open-ai',
@@ -51,6 +55,7 @@ const quickActions: QuickAction[] = [
     tone: 'from-ai-cyan via-cyan-500 to-sky-500',
     hotkey: '⌘K',
     popular: true,
+    href: '/assistant',
   },
   {
     key: 'generate-report',
@@ -59,6 +64,7 @@ const quickActions: QuickAction[] = [
     icon: FileText,
     tone: 'from-ai-emerald via-emerald-500 to-teal-500',
     hotkey: '⌘R',
+    href: '/analytics',
   },
   {
     key: 'create-coupon',
@@ -67,10 +73,12 @@ const quickActions: QuickAction[] = [
     icon: Ticket,
     tone: 'from-amber-500 via-orange-500 to-rose-500',
     hotkey: '⌘C',
+    href: '/checkout',
   },
 ];
 
 function PremiumActionButton({ action, idx }: { action: QuickAction; idx: number }) {
+  const router = useRouter();
   const Icon = action.icon;
   const [isHovered, setIsHovered] = React.useState(false);
 
@@ -78,6 +86,7 @@ function PremiumActionButton({ action, idx }: { action: QuickAction; idx: number
     <motion.button
       key={action.key}
       type="button"
+      onClick={() => router.push(action.href)}
       initial={{ opacity: 0, y: 20, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.5, delay: 0.18 + idx * 0.08, ease: [0.22, 1, 0.36, 1] }}

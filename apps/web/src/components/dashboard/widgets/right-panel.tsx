@@ -44,7 +44,7 @@ const recIcons: Record<
 };
 
 function PremiumInsightCard({ insight, idx }: { insight: Insight; idx: number }) {
-  const Icon = insightIcons[insight.icon];
+  const Icon = (insight?.icon && insightIcons[insight.icon]) || Sparkles;
   const [isHovered, setIsHovered] = React.useState(false);
 
   return (
@@ -176,7 +176,7 @@ export function AiInsights() {
 }
 
 function PremiumRecommendationCard({ recommendation, idx }: { recommendation: Recommendation; idx: number }) {
-  const Icon = recIcons[recommendation.icon];
+  const Icon = (recommendation?.icon && recIcons[recommendation.icon]) || Lightbulb;
   const [isHovered, setIsHovered] = React.useState(false);
 
   return (
@@ -296,7 +296,7 @@ export function SmartRecommendations() {
   );
 }
 
-const alertStyles: Record<DashboardAlert['level'], { icon: typeof AlertTriangle; tone: string; dot: string }> = {
+const alertStyles: Record<string, { icon: typeof AlertTriangle; tone: string; dot: string }> = {
   critical: {
     icon: XCircle,
     tone: 'bg-red-500/12 text-red-500 border-red-500/25',
@@ -319,13 +319,28 @@ const alertStyles: Record<DashboardAlert['level'], { icon: typeof AlertTriangle;
   },
 };
 
+function getNormalizedAlertStyle(level?: string) {
+  const norm = (level || '').toLowerCase().trim();
+  if (norm === 'critical' || norm === 'error' || norm === 'danger' || norm === 'high') {
+    return { level: 'critical' as const, ...alertStyles.critical };
+  }
+  if (norm === 'warning' || norm === 'warn' || norm === 'medium') {
+    return { level: 'warning' as const, ...alertStyles.warning };
+  }
+  if (norm === 'success' || norm === 'low') {
+    return { level: 'success' as const, ...alertStyles.success };
+  }
+  return { level: 'info' as const, ...alertStyles.info };
+}
+
 function PremiumAlertCard({ alert, idx }: { alert: DashboardAlert; idx: number }) {
-  const s = alertStyles[alert.level];
-  const Icon = s.icon;
+  const s = getNormalizedAlertStyle(alert?.level);
+  const Icon = s.icon || Info;
+  const isCritical = s.level === 'critical';
 
   return (
     <motion.div
-      key={alert.id}
+      key={alert?.id || idx}
       initial={{ opacity: 0, x: -20, scale: 0.95 }}
       animate={{ opacity: 1, x: 0, scale: 1 }}
       transition={{ duration: 0.4, delay: 0.3 + idx * 0.07, ease: [0.22, 1, 0.36, 1] }}
@@ -334,10 +349,10 @@ function PremiumAlertCard({ alert, idx }: { alert: DashboardAlert; idx: number }
       {/* Alert level indicator border */}
       <motion.div
         className={cn('absolute left-0 top-0 bottom-0 w-1',
-          alert.level === 'critical' && 'bg-red-500',
-          alert.level === 'warning' && 'bg-amber-500',
-          alert.level === 'info' && 'bg-brand-500',
-          alert.level === 'success' && 'bg-ai-emerald'
+          s.level === 'critical' && 'bg-red-500',
+          s.level === 'warning' && 'bg-amber-500',
+          s.level === 'info' && 'bg-brand-500',
+          s.level === 'success' && 'bg-ai-emerald'
         )}
         initial={{ scaleY: 0 }}
         animate={{ scaleY: 1 }}
@@ -361,20 +376,20 @@ function PremiumAlertCard({ alert, idx }: { alert: DashboardAlert; idx: number }
             transition={{ delay: 0.1 + idx * 0.05 }}
           >
             <motion.span
-              className={cn('inline-block w-1.5 h-1.5 rounded-full', s.dot, alert.level === 'critical' && 'animate-pulse')}
+              className={cn('inline-block w-1.5 h-1.5 rounded-full', s.dot, isCritical && 'animate-pulse')}
               animate={{ scale: [1, 1.3, 1] }}
               transition={{ duration: 2, repeat: Infinity, delay: idx * 0.3 }}
             />
-            <p className="text-[12.5px] font-semibold text-foreground truncate">{alert.title}</p>
+            <p className="text-[12.5px] font-semibold text-foreground truncate">{alert?.title || 'System Alert'}</p>
           </motion.div>
         </div>
-        <p className="text-[11.5px] text-muted-foreground mt-0.5 leading-relaxed">{alert.detail}</p>
+        <p className="text-[11.5px] text-muted-foreground mt-0.5 leading-relaxed">{alert?.detail || ''}</p>
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
         <Clock className="w-3 h-3 text-muted-foreground" strokeWidth={2} />
         <span className="text-[10.5px] font-mono text-muted-foreground whitespace-nowrap pt-0.5">
-          {alert.time}
+          {alert?.time || 'now'}
         </span>
       </div>
     </motion.div>

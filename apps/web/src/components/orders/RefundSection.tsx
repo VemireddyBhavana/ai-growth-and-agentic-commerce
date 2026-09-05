@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { useOrdersStore } from '@/stores/ordersStore';
-import { Order } from '@/types/orders';
+import type { Order } from '@/types/orders';
 import { RefreshCcw, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 

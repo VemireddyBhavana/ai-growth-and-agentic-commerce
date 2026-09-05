@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { AuditRecord, RiskLevel, AuditEventStatus } from '@/types/audit';
+import type { AuditRecord, RiskLevel, AuditEventStatus } from '@/types/audit';
+import { apiClient } from '@/lib/api-client';
 
 const generateMockTimeline = (baseTime: number, isSuccess: boolean = true) => {
   const steps = [
@@ -53,6 +54,7 @@ const mockAudits: AuditRecord[] = [
     paymentDetails: {
       razorpayOrderId: 'order_KjU8YhY',
       razorpayPaymentId: 'pay_KjU9ZmY',
+      
       verificationStatus: 'Verified',
       method: 'Credit Card',
       amount: 497.8,
@@ -101,20 +103,18 @@ const mockAudits: AuditRecord[] = [
   }
 ];
 
-import { apiClient } from '@/lib/api-client';
-
 interface AuditState {
   events: AuditRecord[];
   searchQuery: string;
   statusFilter: AuditEventStatus | 'all';
   riskFilter: RiskLevel | 'all';
   isLoading: boolean;
-  
+
   fetchEvents: () => Promise<void>;
   setSearchQuery: (query: string) => void;
   setStatusFilter: (status: AuditEventStatus | 'all') => void;
   setRiskFilter: (risk: RiskLevel | 'all') => void;
-  
+
   getFilteredEvents: () => AuditRecord[];
   getAuditStats: () => { total: number; successfulPayments: number; failedPayments: number; recommendations: number; securityEvents: number };
 }
@@ -132,6 +132,7 @@ export const useAuditStore = create<AuditState>((set, get) => ({
       const response = await apiClient.get('/audit/events');
       const data = response.data?.data || response.data;
       if (Array.isArray(data) && data.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const mappedAudits: AuditRecord[] = data.map((e: any, idx: number) => ({
           id: e.id || `AUD-${9000 + idx}`,
           timestamp: e.timestamp || e.createdAt || new Date().toISOString(),
@@ -162,13 +163,13 @@ export const useAuditStore = create<AuditState>((set, get) => ({
 
   getFilteredEvents: () => {
     const { events, searchQuery, statusFilter, riskFilter } = get();
-    
+
     let filtered = [...events];
 
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      filtered = filtered.filter(e => 
-        e.id.toLowerCase().includes(q) || 
+      filtered = filtered.filter(e =>
+        e.id.toLowerCase().includes(q) ||
         e.user.toLowerCase().includes(q) ||
         (e.orderId && e.orderId.toLowerCase().includes(q)) ||
         (e.paymentId && e.paymentId.toLowerCase().includes(q))

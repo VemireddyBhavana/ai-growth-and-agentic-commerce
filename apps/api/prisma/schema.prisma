@@ -197,7 +197,6 @@ model User {
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
   stores        Store[]
-  sessions      Session[]
   notifications Notification[]
 
   @@map("users")
@@ -646,7 +645,6 @@ model Session {
 
   customer      Customer?        @relation(fields: [customerId], references: [id])
   store         Store            @relation(fields: [storeId], references: [id])
-  user          User?            @relation(fields: [customerId], references: [id], map: "session_user_fkey")
   orders        Order[]
   events        SessionEvent[]
   conversations AiConversation[]

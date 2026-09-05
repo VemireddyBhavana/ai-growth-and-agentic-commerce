@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Search, Package, ShoppingCart, Users, Sparkles } from 'lucide-react';
 import { useDashboardSnapshot } from '@/lib/dashboard/hooks';
@@ -12,6 +13,7 @@ type CommandPaletteProps = {
 };
 
 export function CommandPalette({ open, onClose }: CommandPaletteProps) {
+  const router = useRouter();
   const [query, setQuery] = React.useState('');
   const { data } = useDashboardSnapshot();
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -81,12 +83,12 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
             <div className="max-h-[min(28rem,60vh)] overflow-y-auto p-2">
               <Section icon={Package} label="Products">
                 {products.slice(0, 4).map((p) => (
-                  <Row key={p.id} title={p.name} meta={p.sku} onClick={onClose} />
+                  <Row key={p.id} title={p.name} meta={p.sku} onClick={() => { onClose(); router.push('/assistant'); }} />
                 ))}
               </Section>
               <Section icon={ShoppingCart} label="Orders">
                 {orders.slice(0, 4).map((o) => (
-                  <Row key={o.id} title={o.customer} meta={`${o.id} · ₹ ${o.amount.toLocaleString('en-IN')}`} onClick={onClose} />
+                  <Row key={o.id} title={o.customer} meta={`${o.id} · ₹ ${o.amount.toLocaleString('en-IN')}`} onClick={() => { onClose(); router.push('/orders'); }} />
                 ))}
               </Section>
               <Section icon={Users} label="Live visitors">
@@ -94,14 +96,14 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
                   .filter((v) => !q || v.location.toLowerCase().includes(q) || v.page.toLowerCase().includes(q))
                   .slice(0, 3)
                   .map((v) => (
-                    <Row key={v.id} title={`${v.location} · ${v.activity}`} meta={v.page} onClick={onClose} />
+                    <Row key={v.id} title={`${v.location} · ${v.activity}`} meta={v.page} onClick={() => { onClose(); router.push('/analytics'); }} />
                   ))}
               </Section>
               <Section icon={Sparkles} label="AI insights">
                 {(data?.insights ?? [])
                   .filter((i) => !q || i.title.toLowerCase().includes(q))
                   .map((i) => (
-                    <Row key={i.id} title={i.title} meta={i.impact} onClick={onClose} />
+                    <Row key={i.id} title={i.title} meta={i.impact} onClick={() => { onClose(); router.push('/analytics'); }} />
                   ))}
               </Section>
             </div>

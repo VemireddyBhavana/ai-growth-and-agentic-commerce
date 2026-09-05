@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { DashboardSidebar } from './sidebar';
 import { DashboardNavbar } from './navbar';
@@ -14,12 +15,52 @@ type DashboardShellProps = {
 };
 
 export function DashboardShell({ children, merchantName }: DashboardShellProps) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [activeNav, setActiveNav] = React.useState('dashboard');
   const [collapsed, setCollapsed] = React.useState(false);
   const [searchOpen, setSearchOpen] = React.useState(false);
   const { data } = useDashboardSnapshot();
   const resolvedMerchant = merchantName ?? data?.merchantName ?? 'Acme Retail';
+
+  React.useEffect(() => {
+    if (pathname.includes('/assistant')) setActiveNav('ai-assistant');
+    else if (pathname.includes('/orders')) setActiveNav('orders');
+    else if (pathname.includes('/analytics')) setActiveNav('analytics');
+    else if (pathname.includes('/audit')) setActiveNav('audit-trail');
+    else if (pathname.includes('/checkout')) setActiveNav('payments');
+    else setActiveNav('dashboard');
+  }, [pathname]);
+
+  const handleNavSelect = (key: string) => {
+    setActiveNav(key);
+    setSidebarOpen(false);
+    switch (key) {
+      case 'dashboard':
+        router.push('/dashboard');
+        break;
+      case 'ai-assistant':
+      case 'products':
+        router.push('/assistant');
+        break;
+      case 'orders':
+      case 'customers':
+        router.push('/orders');
+        break;
+      case 'analytics':
+        router.push('/analytics');
+        break;
+      case 'audit-trail':
+        router.push('/audit');
+        break;
+      case 'payments':
+        router.push('/checkout');
+        break;
+      default:
+        break;
+    }
+  };
 
   React.useEffect(() => {
     const tablet = window.matchMedia('(min-width: 768px) and (max-width: 1023px)');
@@ -56,7 +97,7 @@ export function DashboardShell({ children, merchantName }: DashboardShellProps) 
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         activeKey={activeNav}
-        onSelect={setActiveNav}
+        onSelect={handleNavSelect}
         collapsed={collapsed}
         onToggleCollapse={() => setCollapsed((v) => !v)}
       />

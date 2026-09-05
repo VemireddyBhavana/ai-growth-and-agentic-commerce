@@ -24,35 +24,130 @@ const DEFAULT_SETTINGS: AssistantSettings = {
   showMarginMetrics: true,
 };
 
-const INITIAL_WELCOME_MESSAGE: ChatMessage = {
-  id: 'msg-welcome-init',
-  role: 'assistant',
-  content: `👋 **Welcome to the AI Shopping Assistant!**
-
-I am your autonomous commerce concierge. Tell me what you're looking for, your budget, or features you care about, and I'll find the best options with explainable match scores!
-
-Try queries like:
-- *"I need wireless earbuds under ₹3000"*
-- *"Show me smartwatches with AMOLED display"*
-- *"What's the best home office setup kit?"*`,
-  timestamp: new Date().toISOString(),
-  status: 'complete',
-  followUpSuggestions: [
-    'Wireless earbuds under ₹3000',
-    'Best smartwatches for fitness',
-    'Home office essentials kit',
-    'Power banks with 65W fast charging',
-  ],
-};
+const INITIAL_CHAT_MESSAGES: ChatMessage[] = [
+  {
+    id: 'msg-user-1',
+    role: 'user',
+    content: 'Hi, I need a gaming laptop under ₹70,000',
+    timestamp: new Date(Date.now() - 3 * 60000).toISOString(),
+    status: 'complete',
+  },
+  {
+    id: 'msg-ai-1',
+    role: 'assistant',
+    content: 'Hello! 👋 I found some great gaming laptops within your budget. Here are my top picks:',
+    timestamp: new Date(Date.now() - 3 * 60000 + 5000).toISOString(),
+    status: 'complete',
+    recommendations: [
+      {
+        product: ASSISTANT_CATALOG[0], // HP Victus
+        confidenceScore: 0.95,
+        matchReason: 'Top seller under ₹70,000 with RTX 3050 & 144Hz high refresh display',
+        isTopPick: true,
+        explainability: {
+          intentFit: 'Matches budget (< ₹70k) and gaming performance criteria with RTX 3050 GPU.',
+          marginContribution: 'High merchant gross margin of 22%.',
+          inventoryHealth: '45 units in local warehouse, fast same-day dispatch available.',
+          confidenceBreakdown: [
+            { factor: 'Budget Alignment (< ₹70,000)', score: 98 },
+            { factor: 'Gaming Spec (RTX 3050 + 144Hz)', score: 95 },
+            { factor: 'Customer Satisfaction (4.5 ★)', score: 92 },
+          ],
+        },
+      },
+      {
+        product: ASSISTANT_CATALOG[1], // Acer Nitro 5
+        confidenceScore: 0.91,
+        matchReason: 'AMD Ryzen 5 hexa-core processor + CoolBoost dual-fan cooling',
+        isTopPick: false,
+        explainability: {
+          intentFit: 'Strong alternative with high multicore performance for gaming & streaming.',
+          marginContribution: '21.5% margin.',
+          inventoryHealth: '28 units in stock.',
+          confidenceBreakdown: [
+            { factor: 'Budget Alignment', score: 92 },
+            { factor: 'Processor Power', score: 94 },
+          ],
+        },
+      },
+      {
+        product: ASSISTANT_CATALOG[2], // ASUS TUF F15
+        confidenceScore: 0.89,
+        matchReason: 'Military Grade MIL-STD-810H durability + Adaptive Sync panel',
+        isTopPick: false,
+        explainability: {
+          intentFit: 'Durable construction with anti-dust self-cleaning cooling.',
+          marginContribution: '22% margin.',
+          inventoryHealth: '35 units in stock.',
+          confidenceBreakdown: [
+            { factor: 'Durability Rating', score: 96 },
+            { factor: 'Value Ratio', score: 90 },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: 'msg-user-2',
+    role: 'user',
+    content: 'HP Victus looks good. I also need a mouse.',
+    timestamp: new Date(Date.now() - 2 * 60000).toISOString(),
+    status: 'complete',
+  },
+  {
+    id: 'msg-ai-2',
+    role: 'assistant',
+    content: 'Great choice! 🎮 Here are some recommended gaming mice:',
+    timestamp: new Date(Date.now() - 2 * 60000 + 4000).toISOString(),
+    status: 'complete',
+    recommendations: [
+      {
+        product: ASSISTANT_CATALOG[3], // Logitech G102
+        confidenceScore: 0.97,
+        matchReason: 'Best companion gaming mouse with 8000 DPI & LIGHTSYNC RGB',
+        isTopPick: true,
+        explainability: {
+          intentFit: 'Precision 8000 DPI sensor and programmable buttons for competitive gaming.',
+          marginContribution: '42% accessory margin.',
+          inventoryHealth: '210 units ready to ship.',
+          confidenceBreakdown: [
+            { factor: 'Companion Compatibility', score: 99 },
+            { factor: 'Price & Value', score: 97 },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: 'msg-user-3',
+    role: 'user',
+    content: 'Okay, add it.',
+    timestamp: new Date(Date.now() - 60000).toISOString(),
+    status: 'complete',
+  },
+  {
+    id: 'msg-ai-3',
+    role: 'assistant',
+    content: `Added to cart! 🛒\n\n**Subtotal (2 items): ₹71,298**\n\nShall I proceed to checkout?`,
+    timestamp: new Date(Date.now() - 50000).toISOString(),
+    status: 'complete',
+    followUpSuggestions: [
+      'Proceed to Checkout',
+      'Continue Shopping',
+      'Add Laptop Backpack',
+      'Apply 15% Weekend Discount',
+    ],
+  },
+];
 
 function createInitialSession(): ChatSession {
   const now = new Date().toISOString();
   return {
     id: `session-${Date.now()}`,
-    title: 'New Shopping Inquiry',
+    title: 'Gaming Setup Recommendation',
     createdAt: now,
     updatedAt: now,
-    messages: [INITIAL_WELCOME_MESSAGE],
+    messages: INITIAL_CHAT_MESSAGES,
   };
 }
 
@@ -165,7 +260,18 @@ export const useAssistantStore = create<AssistantState>()(
           streamingMessageId: null,
 
           // Commerce
-          cart: [],
+          cart: [
+            { product: ASSISTANT_CATALOG[0], quantity: 1, addedAt: new Date(Date.now() - 120000).toISOString() },
+            { 
+              product: {
+                ...ASSISTANT_CATALOG[3],
+                name: 'Logitech G102 Gaming Mouse + Accessories Package',
+                price: 9699,
+              }, 
+              quantity: 1, 
+              addedAt: new Date(Date.now() - 60000).toISOString() 
+            },
+          ],
           savedProducts: [ASSISTANT_CATALOG[0], ASSISTANT_CATALOG[2]],
           orders: [
             {

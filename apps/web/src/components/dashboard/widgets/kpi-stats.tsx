@@ -138,7 +138,7 @@ function TrendBadge({ value, up }: { value: number; up: boolean }) {
 export { TrendBadge };
 
 function PremiumKpiCard({ kpi, idx }: { kpi: KpiMetric; idx: number }) {
-  const Icon = iconMap[kpi.icon];
+  const Icon = (kpi?.icon && iconMap[kpi.icon]) || TrendingUp;
   const [isHovered, setIsHovered] = React.useState(false);
 
   return (
@@ -157,7 +157,7 @@ function PremiumKpiCard({ kpi, idx }: { kpi: KpiMetric; idx: number }) {
         <motion.div
           className="p-5 space-y-4 relative overflow-hidden"
           animate={{
-            background: isHovered ? 'rgba(255,255,255,0.03)' : 'transparent',
+            background: isHovered ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0)',
           }}
           transition={{ duration: 0.3 }}
         >
@@ -210,9 +210,9 @@ function PremiumKpiCard({ kpi, idx }: { kpi: KpiMetric; idx: number }) {
 
           <div className="relative">
             <MiniSparkline
-              data={kpi.sparkline}
-              color={sparkColors[kpi.glow]}
-              type={kpi.chartType}
+              data={kpi?.sparkline || []}
+              color={(kpi?.glow && sparkColors[kpi.glow]) || '#6366F1'}
+              type={kpi?.chartType || 'area'}
             />
             {/* Subtle grid pattern overlay */}
             <div className="absolute inset-0 bg-grid-white opacity-[0.03] pointer-events-none" />

@@ -16,7 +16,7 @@ export interface HeroContentProps {
 
 export function HeroContent({
   className = '',
-  primaryHref = '#get-started',
+  primaryHref = '/register',
   secondaryHref = '#demo',
   onPrimaryClick,
   onSecondaryClick,
@@ -82,11 +82,19 @@ export function HeroContent({
           </span>
         </Link>
 
-        <Link
+        <a
           href={secondaryHref}
-          onClick={onSecondaryClick}
+          onClick={(e) => {
+            if (secondaryHref.startsWith('#')) {
+              e.preventDefault();
+              const el = document.getElementById(secondaryHref.replace('#', ''));
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+              window.history.pushState(null, '', secondaryHref);
+            }
+            onSecondaryClick?.();
+          }}
           aria-label="Watch product demo"
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl text-base font-medium text-foreground bg-secondary/80 dark:bg-obsidian-850 hover:bg-secondary dark:hover:bg-obsidian-800 border border-border transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-500 focus-visible:ring-offset-background"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl text-base font-medium text-foreground bg-secondary/80 dark:bg-obsidian-850 hover:bg-secondary dark:hover:bg-obsidian-800 border border-border transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-500 focus-visible:ring-offset-background cursor-pointer"
         >
           <span className="relative inline-flex items-center justify-center">
             <Play
@@ -96,7 +104,7 @@ export function HeroContent({
             <span className="absolute inset-0 rounded-full bg-ai-violet/30 blur-md animate-pulse-glow" aria-hidden="true" />
           </span>
           <span>Watch Demo</span>
-        </Link>
+        </a>
       </motion.div>
 
       <motion.div

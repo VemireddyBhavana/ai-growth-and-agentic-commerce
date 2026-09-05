@@ -1,5 +1,6 @@
 import React from 'react';
 import { useOrdersStore } from '@/stores/ordersStore';
+import type { Order } from '@/types/orders';
 import Link from 'next/link';
 import { Download, ChevronRight, FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -12,6 +13,7 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
     delivered: 'bg-green-400/10 text-green-400 border-green-400/20',
     cancelled: 'bg-red-400/10 text-red-400 border-red-400/20',
     refunded: 'bg-orange-400/10 text-orange-400 border-orange-400/20',
+    completed: 'bg-green-400/10 text-green-400 border-green-400/20',
   };
 
   const style = styles[status] || 'bg-white/10 text-white border-white/20';
@@ -23,7 +25,11 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
   );
 };
 
-export const OrdersTable: React.FC = () => {
+interface OrdersTableProps {
+  onInvoice?: (order: Order) => void;
+}
+
+export const OrdersTable: React.FC<OrdersTableProps> = ({ onInvoice }) => {
   const orders = useOrdersStore((state) => state.getFilteredAndSortedOrders());
 
   if (orders.length === 0) {
@@ -41,47 +47,56 @@ export const OrdersTable: React.FC = () => {
 
   return (
     <div className="overflow-x-auto bg-white/5 border border-white/10 rounded-xl backdrop-blur-sm">
-      <table className="w-full text-left border-collapse">
+      <table className="w-full text-left border-collapse min-w-[640px]">
         <thead>
           <tr className="border-b border-white/10 text-white/60 text-sm">
             <th className="p-4 font-medium">Order ID</th>
-            <th className="p-4 font-medium">Date</th>
+            <th className="p-4 font-medium hidden sm:table-cell">Date</th>
             <th className="p-4 font-medium">Customer</th>
             <th className="p-4 font-medium">Amount</th>
-            <th className="p-4 font-medium">Payment</th>
+            <th className="p-4 font-medium hidden md:table-cell">Payment</th>
             <th className="p-4 font-medium">Status</th>
             <th className="p-4 font-medium text-right">Actions</th>
           </tr>
         </thead>
         <tbody>
           {orders.map((order, idx) => (
-            <motion.tr 
+            <motion.tr
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05 }}
-              key={order.id} 
-              className="border-b border-white/5 hover:bg-white/[0.02] transition-colors group"
+              key={order.id}
+              className="border-b border-white/5 hover:bg-white/[0.03] transition-colors group"
             >
-              <td className="p-4 text-sm font-medium text-white">{order.id}</td>
-              <td className="p-4 text-sm text-white/70">
+              <td className="p-4 text-sm font-medium text-white font-mono">{order.id}</td>
+              <td className="p-4 text-sm text-white/70 hidden sm:table-cell">
                 {new Date(order.date).toLocaleDateString()}
               </td>
               <td className="p-4 text-sm text-white/90">{order.customerName}</td>
               <td className="p-4 text-sm font-medium text-white">₹{order.total.toLocaleString()}</td>
-              <td className="p-4 text-sm">
+              <td className="p-4 text-sm hidden md:table-cell">
                 <StatusBadge status={order.paymentDetails.status} />
               </td>
               <td className="p-4 text-sm">
                 <StatusBadge status={order.status} />
               </td>
               <td className="p-4 text-right">
-                <div className="flex items-center justify-end space-x-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button className="text-white/60 hover:text-white transition-colors" title="Download Invoice">
-                    <Download className="w-4 h-4" />
-                  </button>
-                  <Link href={`/orders/${order.id}`} className="text-violet-400 hover:text-violet-300 flex items-center text-sm font-medium transition-colors">
-                    Details
-                    <ChevronRight className="w-4 h-4 ml-1" />
+                <div className="flex items-center justify-end gap-2">
+                  {onInvoice && (
+                    <button
+                      onClick={() => onInvoice(order)}
+                      className="text-white/40 hover:text-white transition-colors p-1.5 hover:bg-white/10 rounded-lg"
+                      title="Download Invoice"
+                    >
+                      <Download className="w-4 h-4" />
+                    </button>
+                  )}
+                  <Link
+                    href={`/orders/${order.id}`}
+                    className="text-violet-400 hover:text-violet-300 flex items-center text-sm font-medium transition-colors px-2 py-1 hover:bg-violet-500/10 rounded-lg"
+                  >
+                    <span className="hidden sm:inline">Details</span>
+                    <ChevronRight className="w-4 h-4 ml-0 sm:ml-1" />
                   </Link>
                 </div>
               </td>

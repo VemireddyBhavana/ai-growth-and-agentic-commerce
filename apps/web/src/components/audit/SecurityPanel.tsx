@@ -1,6 +1,6 @@
 import React from 'react';
-import { SecurityDetails } from '@/types/audit';
-import { Shield, ShieldCheck, ShieldAlert, Activity } from 'lucide-react';
+import type { SecurityDetails } from '@/types/audit';
+import { ShieldCheck, ShieldAlert, Activity } from 'lucide-react';
 
 export const SecurityPanel: React.FC<{ security: SecurityDetails }> = ({ security }) => {
   const isHighRisk = security.riskScore > 30;

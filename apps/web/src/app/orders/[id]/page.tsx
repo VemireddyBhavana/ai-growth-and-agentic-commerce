@@ -30,34 +30,36 @@ export default function OrderDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#0a0a0a] text-white py-6 sm:py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <Link href="/orders" className="flex items-center text-white/60 hover:text-white transition-colors">
+        <div className="flex items-center justify-between mb-6 sm:mb-8 gap-2">
+          <Link href="/orders" className="flex items-center text-white/60 hover:text-white transition-colors text-sm sm:text-base">
             <ChevronLeft className="w-5 h-5 mr-1" />
-            Back to Orders
+            <span className="hidden sm:inline">Back to Orders</span>
+            <span className="sm:hidden">Back</span>
           </Link>
           <button 
             onClick={() => setIsInvoiceOpen(true)}
-            className="flex items-center text-violet-400 hover:text-violet-300 font-medium transition-colors bg-violet-500/10 px-4 py-2 rounded-lg border border-violet-500/20"
+            className="flex items-center text-violet-400 hover:text-violet-300 font-medium transition-colors bg-violet-500/10 px-3 sm:px-4 py-2 rounded-lg border border-violet-500/20 text-sm"
           >
-            <Receipt className="w-4 h-4 mr-2" />
-            View Invoice
+            <Receipt className="w-4 h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">View Invoice</span>
+            <span className="sm:hidden">Invoice</span>
           </button>
         </div>
 
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 pb-8 border-b border-white/10">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 sm:mb-8 pb-6 sm:pb-8 border-b border-white/10 gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60 mb-2">
+            <h1 className="text-xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60 mb-1 sm:mb-2">
               Order {order.id}
             </h1>
-            <p className="text-white/60">Placed on {new Date(order.date).toLocaleString()}</p>
+            <p className="text-white/60 text-sm sm:text-base">Placed on {new Date(order.date).toLocaleString()}</p>
           </div>
-          <div className="mt-4 md:mt-0 text-right">
-            <span className="inline-block px-3 py-1 bg-white/10 rounded-full text-sm font-medium capitalize mb-2">
+          <div className="sm:text-right flex sm:flex-col items-center sm:items-end gap-3 sm:gap-0">
+            <span className="inline-block px-3 py-1 bg-white/10 rounded-full text-xs sm:text-sm font-medium capitalize sm:mb-2">
               Status: {order.status}
             </span>
-            <p className="text-2xl font-bold">₹{order.total.toLocaleString()}</p>
+            <p className="text-xl sm:text-2xl font-bold">₹{order.total.toLocaleString()}</p>
           </div>
         </div>
 
@@ -66,21 +68,21 @@ export default function OrderDetailsPage() {
           <div className="lg:col-span-8 space-y-8">
             
             {/* Items */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
-              <h3 className="text-xl font-semibold text-white mb-6">Order Items</h3>
-              <div className="space-y-4">
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-6 backdrop-blur-sm">
+              <h3 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Order Items</h3>
+              <div className="space-y-3 sm:space-y-4">
                 {order.items.map(item => (
-                  <div key={item.id} className="flex justify-between items-center py-4 border-b border-white/5 last:border-0">
-                    <div className="flex items-center">
-                      <div className="w-16 h-16 bg-white/10 rounded-lg mr-4 flex items-center justify-center">
-                        <FileText className="w-6 h-6 text-white/40" />
+                  <div key={item.id} className="flex justify-between items-center py-3 sm:py-4 border-b border-white/5 last:border-0 gap-3">
+                    <div className="flex items-center min-w-0">
+                      <div className="w-10 h-10 sm:w-16 sm:h-16 bg-white/10 rounded-lg mr-3 sm:mr-4 flex items-center justify-center shrink-0">
+                        <FileText className="w-4 h-4 sm:w-6 sm:h-6 text-white/40" />
                       </div>
-                      <div>
-                        <p className="font-medium text-white">{item.name}</p>
-                        <p className="text-sm text-white/60">Qty: {item.quantity}</p>
+                      <div className="min-w-0">
+                        <p className="font-medium text-white text-sm sm:text-base truncate">{item.name}</p>
+                        <p className="text-xs sm:text-sm text-white/60">Qty: {item.quantity}</p>
                       </div>
                     </div>
-                    <p className="font-medium">₹{(item.price * item.quantity).toLocaleString()}</p>
+                    <p className="font-medium shrink-0 text-sm sm:text-base">₹{(item.price * item.quantity).toLocaleString()}</p>
                   </div>
                 ))}
               </div>

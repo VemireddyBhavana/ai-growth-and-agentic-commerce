@@ -80,9 +80,11 @@ export class DashboardRepository {
   /**
    * Get complete dashboard snapshot for a store
    */
-  async getDashboardSnapshot(storeId: string): Promise<DashboardSnapshot> {
+  async getDashboardSnapshot(storeIdOrSlug: string): Promise<DashboardSnapshot> {
+    const store = await this.getStoreInfo(storeIdOrSlug);
+    const storeId = store.id;
+
     const [
-      store,
       kpis,
       revenue,
       orders,
@@ -96,7 +98,6 @@ export class DashboardRepository {
       recentOrders,
       aiMetrics,
     ] = await Promise.all([
-      this.getStoreInfo(storeId),
       this.getKpiMetrics(storeId),
       this.getRevenueData(storeId),
       this.getOrdersData(storeId),
@@ -134,14 +135,25 @@ export class DashboardRepository {
   /**
    * Get store information
    */
-  private async getStoreInfo(storeId: string) {
-    const store = await prisma.store.findUnique({
-      where: { id: storeId },
-      select: { name: true, slug: true },
+  private async getStoreInfo(storeIdOrSlug: string) {
+    let store = await prisma.store.findFirst({
+      where: {
+        OR: [
+          { id: storeIdOrSlug },
+          { slug: storeIdOrSlug },
+        ],
+      },
+      select: { id: true, name: true, slug: true },
     });
 
     if (!store) {
-      throw new Error('Store not found');
+      store = await prisma.store.findFirst({
+        select: { id: true, name: true, slug: true },
+      });
+    }
+
+    if (!store) {
+      throw new Error(`Store not found: ${storeIdOrSlug}`);
     }
 
     return store;
@@ -475,21 +487,27 @@ export class DashboardRepository {
   private async getConversationData(storeId: string): Promise<ConversationPoint[]> {
     const hours = ['00', '04', '08', '12', '16', '20', 'Now'];
     const data: ConversationPoint[] = [];
+    const now = new Date();
+    const currentHour = now.getHours();
 
     for (let i = 0; i < hours.length; i++) {
-      const hour = parseInt(hours[i]!, 10);
-      const now = new Date();
+      const isNow = hours[i] === 'Now';
+      const hour = isNow ? currentHour : (parseInt(hours[i]!, 10) || 0);
       const hourStart = new Date(now);
       hourStart.setHours(hour, 0, 0, 0);
 
       const hourEnd = new Date(hourStart);
-      hourEnd.setHours(hour + 4);
+      if (isNow) {
+        hourEnd.setTime(now.getTime());
+      } else {
+        hourEnd.setHours(hour + 4, 0, 0, 0);
+      }
 
       const sessions = await prisma.session.count({
         where: {
           storeId,
           aiEnabled: true,
-          createdAt: { gte: hourStart, lt: hours[i] === 'Now' ? now : hourEnd },
+          createdAt: { gte: hourStart, lte: hourEnd },
         },
       });
 
@@ -497,7 +515,7 @@ export class DashboardRepository {
         where: {
           session: {
             storeId,
-            createdAt: { gte: hourStart, lt: hours[i] === 'Now' ? now : hourEnd },
+            createdAt: { gte: hourStart, lte: hourEnd },
           },
         },
       });

@@ -84,7 +84,7 @@ export const AuditTable: React.FC = () => {
                 <StatusBadge status={event.status} />
               </td>
               <td className="p-4 text-right">
-                <Link href={`/audit/${event.id}`} className="text-violet-400 hover:text-violet-300 inline-flex items-center text-sm font-medium transition-colors opacity-0 group-hover:opacity-100">
+                <Link href={`/audit/${event.id}`} className="text-violet-400 hover:text-violet-300 inline-flex items-center text-sm font-medium transition-colors opacity-100 sm:opacity-80 sm:group-hover:opacity-100">
                   View Details
                   <ChevronRight className="w-4 h-4 ml-1" />
                 </Link>

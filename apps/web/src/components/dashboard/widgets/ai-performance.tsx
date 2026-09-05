@@ -111,7 +111,7 @@ function CircularProgress({
 }
 
 function PremiumMetricCard({ metric, idx }: { metric: AiMetric; idx: number }) {
-  const Icon = metricIcons[metric.icon];
+  const Icon = (metric?.icon && metricIcons[metric.icon]) || Sparkles;
   const [isHovered, setIsHovered] = React.useState(false);
 
   return (

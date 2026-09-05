@@ -272,22 +272,56 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({ message }) => 
           </div>
         )}
 
-        {/* Suggested Follow-up Question Chips */}
+        {/* Suggested Action Buttons (e.g. Continue Shopping & Proceed to Checkout) */}
         {!isUser && message.followUpSuggestions && message.followUpSuggestions.length > 0 && (
-          <div className="w-full space-y-1.5 pt-1">
-            <span className="text-[11px] font-mono text-zinc-400">Suggested Follow-ups</span>
-            <div className="flex flex-wrap gap-1.5">
-              {message.followUpSuggestions.map((suggestion, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => sendUserMessage(suggestion)}
-                  className="px-3 py-1.5 rounded-xl text-xs bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-white/10 hover:border-violet-500/40 flex items-center gap-1.5 transition-all active:scale-95 shadow-sm"
-                >
-                  <span>{suggestion}</span>
-                  <ArrowRight className="w-3 h-3 text-zinc-400" />
-                </button>
-              ))}
+          <div className="w-full pt-2">
+            <div className="flex flex-wrap items-center gap-2.5">
+              {message.followUpSuggestions.map((suggestion, idx) => {
+                const isCheckout = suggestion.toLowerCase().includes('proceed to checkout');
+                const isContinue = suggestion.toLowerCase().includes('continue shopping');
+
+                if (isCheckout) {
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => {
+                        const firstProduct = useAssistantStore.getState().cart[0]?.product;
+                        openCheckoutModal(firstProduct);
+                      }}
+                      className="px-5 py-2.5 rounded-xl text-xs font-bold bg-[#635BFF] hover:bg-[#5245eb] text-white shadow-md shadow-violet-600/30 transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <span>Proceed to Checkout</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  );
+                }
+
+                if (isContinue) {
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => sendUserMessage('Show me other categories')}
+                      className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-white dark:bg-zinc-800 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700/60 hover:bg-violet-50 dark:hover:bg-zinc-700 transition-all active:scale-95 cursor-pointer shadow-2xs"
+                    >
+                      <span>Continue Shopping</span>
+                    </button>
+                  );
+                }
+
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => sendUserMessage(suggestion)}
+                    className="px-3 py-1.5 rounded-xl text-xs bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+                  >
+                    <span>{suggestion}</span>
+                    <ArrowRight className="w-3 h-3 text-zinc-400" />
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}

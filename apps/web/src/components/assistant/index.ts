@@ -14,3 +14,8 @@ export * from './razorpay-checkout-modal';
 export * from './saved-products-modal';
 export * from './orders-history-modal';
 export * from './assistant-settings-modal';
+export * from './assistant-top-header';
+export * from './top-recommendations-column';
+export * from './audit-trail-column';
+export * from './assistant-bottom-bar';
+export * from './assistant-mobile-nav';

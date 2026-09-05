@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   Filter,
@@ -16,40 +17,52 @@ import { cn } from '@/lib/utils';
 import { useDashboardSlice } from '@/lib/dashboard/hooks';
 import type { PaymentMethod, RecentOrder } from '@/lib/dashboard/types';
 
-const paymentIcons: Record<PaymentMethod, { icon: string; tone: string }> = {
+const paymentIcons: Record<string, { icon: string; tone: string }> = {
   UPI: { icon: 'UPI', tone: 'bg-brand-500/10 text-brand-500 border-brand-500/20' },
   Card: { icon: '💳', tone: 'bg-ai-violet/10 text-ai-violet border-ai-violet/20' },
+  CARD: { icon: '💳', tone: 'bg-ai-violet/10 text-ai-violet border-ai-violet/20' },
   'Net Banking': { icon: '🏦', tone: 'bg-ai-cyan/10 text-ai-cyan border-ai-cyan/20' },
+  NET_BANKING: { icon: '🏦', tone: 'bg-ai-cyan/10 text-ai-cyan border-ai-cyan/20' },
   'Razorpay Wallet': { icon: 'W', tone: 'bg-ai-emerald/10 text-ai-emerald border-ai-emerald/20' },
+  WALLET: { icon: 'W', tone: 'bg-ai-emerald/10 text-ai-emerald border-ai-emerald/20' },
+  CASH_ON_DELIVERY: { icon: '💵', tone: 'bg-amber-500/10 text-amber-500 border-amber-500/25' },
 };
 
+function getPaymentInfo(payment?: string) {
+  if (!payment) return { icon: '💳', tone: 'bg-ai-violet/10 text-ai-violet border-ai-violet/20' };
+  const key = payment.trim();
+  if (paymentIcons[key]) return paymentIcons[key];
+  const upper = key.toUpperCase();
+  if (upper.includes('UPI')) return paymentIcons.UPI;
+  if (upper.includes('CARD')) return paymentIcons.Card;
+  if (upper.includes('NET') || upper.includes('BANK')) return paymentIcons['Net Banking'];
+  if (upper.includes('WALLET')) return paymentIcons['Razorpay Wallet'];
+  return { icon: '💳', tone: 'bg-ai-violet/10 text-ai-violet border-ai-violet/20' };
+}
+
 function PremiumOrderRow({ order, idx }: { order: RecentOrder; idx: number }) {
-  const pay = paymentIcons[order.payment];
-  const initials = order.customer
+  const router = useRouter();
+  const pay = getPaymentInfo(order?.payment);
+  const customerName = order?.customer || 'Guest Customer';
+  const initials = customerName
     .split(' ')
     .filter(Boolean)
     .slice(0, 2)
     .map((s2: string) => s2[0]?.toUpperCase() ?? '')
-    .join('');
+    .join('') || 'G';
   const [isHovered, setIsHovered] = React.useState(false);
 
   return (
     <motion.tr
       key={order.id}
+      onClick={() => router.push('/orders')}
       initial={{ opacity: 0, y: 10, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.3, delay: 0.44 + idx * 0.05, ease: [0.22, 1, 0.36, 1] }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="group relative hover:bg-background/40 dark:hover:bg-obsidian-950/40 transition-all duration-300"
+      className="group relative hover:bg-background/40 dark:hover:bg-obsidian-950/40 transition-all duration-300 cursor-pointer"
     >
-      {/* Hover highlight */}
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-brand-500/5 via-transparent to-transparent opacity-0"
-        animate={{ opacity: isHovered ? 1 : 0 }}
-        transition={{ duration: 0.2 }}
-      />
-
       <td className="px-5 sm:px-6 py-3.5 whitespace-nowrap relative">
         <div className="flex items-center gap-3">
           <motion.div
@@ -58,38 +71,36 @@ function PremiumOrderRow({ order, idx }: { order: RecentOrder; idx: number }) {
             transition={{ duration: 0.2 }}
           >
             {initials}
-            {order.aiAssisted && (
-              <motion.div
-                className="absolute -right-1 -bottom-1 w-4 h-4 rounded-full bg-gradient-to-br from-ai-violet to-brand-500 border-2 border-card dark:border-obsidian-900 flex items-center justify-center"
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                <Bot className="w-2.5 h-2.5 text-white" strokeWidth={2.6} />
-              </motion.div>
-            )}
           </motion.div>
-          <div className="min-w-0">
-            <p className="text-[13px] font-semibold text-foreground truncate max-w-[160px] group-hover:text-brand-500 transition-colors">
+          <div>
+            <p className="font-heading font-bold text-[13px] text-foreground group-hover:text-brand-500 transition-colors">
               {order.customer}
             </p>
-            <p className="text-[11px] text-muted-foreground truncate max-w-[160px]">
-              {order.email}
-            </p>
+            <p className="text-[11px] font-mono text-muted-foreground">{order.id}</p>
           </div>
         </div>
       </td>
-      <td className="px-5 sm:px-6 py-3.5 max-w-[240px]">
-        <div className="flex items-start gap-2">
-          <span className="text-[12.5px] text-foreground leading-snug">{order.product}</span>
+      <td className="px-5 sm:px-6 py-3.5 whitespace-nowrap">
+        <div className="flex items-center gap-2">
+          {order.aiAssisted && (
+            <motion.div
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-ai-violet/10 text-ai-violet border border-ai-violet/20 text-[9px] font-mono font-bold"
+              whileHover={{ scale: 1.05 }}
+            >
+              <Bot className="w-2.5 h-2.5" strokeWidth={2.4} />
+              AI
+            </motion.div>
+          )}
+          <span className="text-[12.5px] text-foreground font-medium">{order.product}</span>
         </div>
       </td>
       <td className="px-5 sm:px-6 py-3.5 whitespace-nowrap">
         <motion.p
-          className="text-[13.5px] font-extrabold text-foreground tabular-nums"
-          animate={{ scale: isHovered ? 1.05 : 1 }}
+          className="font-mono text-[12.5px] font-semibold text-foreground"
+          whileHover={{ scale: 1.05 }}
           transition={{ duration: 0.2 }}
         >
-          ₹ {order.amount.toLocaleString('en-IN')}
+          ₹ {Number(order?.amount || 0).toLocaleString('en-IN')}
         </motion.p>
       </td>
       <td className="px-5 sm:px-6 py-3.5 whitespace-nowrap">
@@ -121,6 +132,10 @@ function PremiumOrderRow({ order, idx }: { order: RecentOrder; idx: number }) {
         <div className="flex items-center gap-1">
           <motion.button
             type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              router.push('/orders');
+            }}
             whileHover={{ scale: 1.1, rotate: 5 }}
             whileTap={{ scale: 0.9 }}
             className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/5 dark:hover:bg-white/5 transition-all"
@@ -130,6 +145,10 @@ function PremiumOrderRow({ order, idx }: { order: RecentOrder; idx: number }) {
           </motion.button>
           <motion.button
             type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              router.push('/orders');
+            }}
             whileHover={{ scale: 1.1, rotate: -5 }}
             whileTap={{ scale: 0.9 }}
             className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/5 dark:hover:bg-white/5 transition-all"
@@ -144,7 +163,42 @@ function PremiumOrderRow({ order, idx }: { order: RecentOrder; idx: number }) {
 }
 
 export function RecentOrders() {
+  const router = useRouter();
   const { data: recentOrders = [] } = useDashboardSlice('recentOrders');
+  const [searchTerm, setSearchTerm] = React.useState('');
+
+  const filteredOrders = React.useMemo(() => {
+    if (!searchTerm) return recentOrders;
+    const q = searchTerm.toLowerCase();
+    return recentOrders.filter(
+      (o) =>
+        o.customer.toLowerCase().includes(q) ||
+        o.product.toLowerCase().includes(q) ||
+        o.id.toLowerCase().includes(q)
+    );
+  }, [recentOrders, searchTerm]);
+
+  const handleExportCSV = () => {
+    const headers = ['Order ID', 'Customer', 'Product', 'Amount', 'Status', 'Payment', 'Time'];
+    const rows = filteredOrders.map((o) => [
+      o.id,
+      `"${o.customer.replace(/"/g, '""')}"`,
+      `"${o.product.replace(/"/g, '""')}"`,
+      o.amount,
+      o.status,
+      o.payment,
+      o.time,
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `recent-orders-${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 12 }}
@@ -163,12 +217,15 @@ export function RecentOrders() {
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/70" strokeWidth={2} />
                   <input
                     type="search"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search orders…"
                     className="h-8 w-40 rounded-xl border border-border/70 dark:border-white/10 bg-background/60 dark:bg-obsidian-950/60 pl-8 pr-3 text-[11.5px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/40 transition-all focus:shadow-lg focus:shadow-brand-500/10"
                   />
                 </div>
                 <motion.button
                   type="button"
+                  onClick={() => router.push('/orders')}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-xl text-[11.5px] font-semibold border border-border/60 dark:border-white/10 bg-background/60 dark:bg-obsidian-950/60 text-foreground hover:border-brand-500/40 transition-all hover:shadow-lg hover:shadow-brand-500/10"
@@ -178,6 +235,7 @@ export function RecentOrders() {
                 </motion.button>
                 <motion.button
                   type="button"
+                  onClick={handleExportCSV}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-xl text-[11.5px] font-semibold border border-border/60 dark:border-white/10 bg-background/60 dark:bg-obsidian-950/60 text-foreground hover:border-brand-500/40 transition-all hover:shadow-lg hover:shadow-brand-500/10"
@@ -208,7 +266,7 @@ export function RecentOrders() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5 dark:divide-white/5">
-              {recentOrders.map((order, idx) => (
+              {filteredOrders.map((order, idx) => (
                 <PremiumOrderRow key={order.id} order={order} idx={idx} />
               ))}
             </tbody>
@@ -217,7 +275,7 @@ export function RecentOrders() {
 
         <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-t border-white/10 dark:border-white/10">
           <p className="text-[11.5px] text-muted-foreground">
-            Showing <span className="font-semibold text-foreground">{recentOrders.length}</span> of{' '}
+            Showing <span className="font-semibold text-foreground">{filteredOrders.length}</span> of{' '}
             <span className="font-semibold text-foreground">1,328</span> orders today
           </p>
           <div className="flex items-center gap-1.5">

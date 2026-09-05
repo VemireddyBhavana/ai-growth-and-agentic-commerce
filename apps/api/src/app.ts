@@ -23,7 +23,18 @@ export function createApp(): Express {
       origin: env.CORS_ORIGIN,
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'x-request-id'],
+      allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'x-request-id',
+        'x-store-id',
+        'x-client-version',
+        'x-requested-with',
+        'x-api-key',
+        'x-currency',
+        'Accept',
+        'Origin',
+      ],
     })
   );
 

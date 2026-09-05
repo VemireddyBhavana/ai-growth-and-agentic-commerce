@@ -13,10 +13,10 @@ export interface NavLinkItem {
 export const DEFAULT_NAV_LINKS: NavLinkItem[] = [
   { label: 'Home', href: '#home' },
   { label: 'Features', href: '#features' },
-  { label: 'How It Works', href: '#how-it-works' },
-  { label: 'Pricing', href: '#pricing' },
+  { label: 'How It Works', href: '#problem-solution' },
+  { label: 'Demo', href: '#demo' },
   { label: 'FAQ', href: '#faq' },
-  { label: 'Contact', href: '#contact' },
+  { label: 'Dashboard', href: '/dashboard' },
 ];
 
 interface NavLinksProps {
@@ -39,6 +39,7 @@ export function NavLinks({
   React.useEffect(() => {
     const handleScroll = () => {
       const sections = links
+        .filter((link) => link.href.startsWith('#'))
         .map((link) => {
           const id = link.href.replace('#', '');
           const el = document.getElementById(id) ?? document.querySelector(link.href);
@@ -60,8 +61,19 @@ export function NavLinks({
     return () => window.removeEventListener('scroll', handleScroll);
   }, [links]);
 
-  const handleClick = (href: string) => {
-    setActiveHref(href);
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href.startsWith('#')) {
+      e.preventDefault();
+      setActiveHref(href);
+      const targetId = href.replace('#', '');
+      const el = document.getElementById(targetId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
+      window.history.pushState(null, '', href);
+    } else {
+      setActiveHref(href);
+    }
     onNavigate?.(href);
   };
 
@@ -70,12 +82,15 @@ export function NavLinks({
       <ul className={`flex flex-col gap-1 ${className}`} role="list">
         {links.map((link) => {
           const isActive = activeHref === link.href;
+          const isHash = link.href.startsWith('#');
+          const LinkComponent = isHash ? 'a' : Link;
+
           return (
             <li key={link.label} role="none">
-              <Link
+              <LinkComponent
                 role="menuitem"
                 href={link.href}
-                onClick={() => handleClick(link.href)}
+                onClick={(e: React.MouseEvent<HTMLAnchorElement>) => handleClick(e, link.href)}
                 aria-current={isActive ? 'page' : undefined}
                 className={`group relative flex items-center justify-between px-4 py-3 rounded-xl text-base font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/60 ${
                   isActive
@@ -109,7 +124,7 @@ export function NavLinks({
                     clipRule="evenodd"
                   />
                 </svg>
-              </Link>
+              </LinkComponent>
             </li>
           );
         })}
@@ -126,6 +141,9 @@ export function NavLinks({
       {links.map((link, index) => {
         const isActive = activeHref === link.href;
         const isHovered = hoveredIndex === index;
+        const isHash = link.href.startsWith('#');
+        const LinkComponent = isHash ? 'a' : Link;
+
         return (
           <div key={link.label} className="relative" role="none">
             {(isActive || isHovered) && (
@@ -136,10 +154,10 @@ export function NavLinks({
                 aria-hidden="true"
               />
             )}
-            <Link
+            <LinkComponent
               role="menuitem"
               href={link.href}
-              onClick={() => handleClick(link.href)}
+              onClick={(e: React.MouseEvent<HTMLAnchorElement>) => handleClick(e, link.href)}
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
               onFocus={() => setHoveredIndex(index)}
@@ -165,7 +183,7 @@ export function NavLinks({
                   {link.badge}
                 </span>
               )}
-            </Link>
+            </LinkComponent>
           </div>
         );
       })}

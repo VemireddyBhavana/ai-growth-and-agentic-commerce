@@ -1,6 +1,6 @@
 import React from 'react';
-import { AIReasoning } from '@/types/audit';
-import { Sparkles, BrainCircuit, Target, Lightbulb, Ban } from 'lucide-react';
+import type { AIReasoning } from '@/types/audit';
+import { BrainCircuit, Target, Lightbulb, Ban } from 'lucide-react';
 
 export const AIExplainabilityPanel: React.FC<{ reasoning: AIReasoning }> = ({ reasoning }) => {
   return (

@@ -1,5 +1,5 @@
 import React from 'react';
-import { OrderTimelineEvent } from '@/types/orders';
+import type { OrderTimelineEvent } from '@/types/orders';
 import { Check, Circle } from 'lucide-react';
 import { motion } from 'framer-motion';
 

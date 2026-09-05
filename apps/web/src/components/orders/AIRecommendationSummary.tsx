@@ -1,5 +1,5 @@
 import React from 'react';
-import { AIRecommendation } from '@/types/orders';
+import type { AIRecommendation } from '@/types/orders';
 import { Sparkles, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
 

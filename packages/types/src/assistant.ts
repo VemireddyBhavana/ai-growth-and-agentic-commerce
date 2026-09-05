@@ -44,14 +44,18 @@ export interface AssistantProduct {
 }
 
 export interface RecommendationExplainability {
-  reason: string;
-  confidenceScore: number; // 0 to 100
-  customerIntent: string;
-  inventoryAvailability: string; // e.g. "142 units in stock • High Stock"
-  priceMatch: string; // e.g. "100% within budget (₹2,999 vs ₹3,000 max)"
-  popularityScore: number; // 0 to 100
-  expectedMargin: string; // e.g. "High Margin (38%)" or "Great Customer Value"
+  reason?: string;
+  confidenceScore?: number; // 0 to 100
+  customerIntent?: string;
+  inventoryAvailability?: string; // e.g. "142 units in stock • High Stock"
+  priceMatch?: string; // e.g. "100% within budget (₹2,999 vs ₹3,000 max)"
+  popularityScore?: number; // 0 to 100
+  expectedMargin?: string; // e.g. "High Margin (38%)" or "Great Customer Value"
   bundleAdvantage?: string;
+  intentFit?: string;
+  marginContribution?: string;
+  inventoryHealth?: string;
+  confidenceBreakdown?: Array<{ factor: string; score: number }>;
 }
 
 export interface RecommendationCardData {
@@ -60,6 +64,8 @@ export interface RecommendationCardData {
   isTopPick?: boolean;
   isUpsell?: boolean;
   isCrossSell?: boolean;
+  confidenceScore?: number;
+  matchReason?: string;
 }
 
 export interface DynamicBundle {

@@ -160,3 +160,23 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(100, 116, 139, 0.6);
 }
+
+/* Dark themed select dropdown options */
+.dark select option,
+[data-theme="dark"] select option,
+select[class*="bg-white/5"] option {
+  background-color: #1a1a2e;
+  color: #e2e8f0;
+}
+
+/* Mobile touch targets - ensure minimum 44px touch targets */
+@media (hover: none) and (pointer: coarse) {
+  button, a, select, input {
+    min-height: 44px;
+  }
+}
+
+/* Smooth transitions for interactive elements */
+button, a, select, input, textarea {
+  -webkit-tap-highlight-color: transparent;
+}

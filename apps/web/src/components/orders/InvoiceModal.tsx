@@ -1,6 +1,6 @@
 'use client';
-import React, { useState } from 'react';
-import { Order } from '@/types/orders';
+import React from 'react';
+import type { Order } from '@/types/orders';
 import { X, Download, FileText, QrCode } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -52,23 +52,23 @@ export const InvoiceModal: React.FC<{ order: Order, isOpen: boolean, onClose: ()
             </div>
 
             {/* Invoice Content (Scrollable) */}
-            <div className="p-8 overflow-y-auto bg-white text-black print:p-0 print:overflow-visible">
+            <div className="p-4 sm:p-8 overflow-y-auto bg-white text-black print:p-0 print:overflow-visible">
               
               {/* Header Info */}
-              <div className="flex justify-between items-start mb-12">
+              <div className="flex flex-col sm:flex-row justify-between items-start mb-8 sm:mb-12 gap-4">
                 <div>
-                  <h1 className="text-3xl font-black text-gray-900 mb-1">INVOICE</h1>
-                  <p className="text-gray-500 font-medium">#{order.id}</p>
+                  <h1 className="text-2xl sm:text-3xl font-black text-gray-900 mb-1">INVOICE</h1>
+                  <p className="text-gray-500 font-medium text-sm">#{order.id}</p>
                 </div>
-                <div className="text-right">
-                  <h2 className="text-xl font-bold text-violet-600">AI Sales Assistant</h2>
+                <div className="sm:text-right">
+                  <h2 className="text-lg sm:text-xl font-bold text-violet-600">AI Sales Assistant</h2>
                   <p className="text-gray-500 text-sm mt-1">123 Commerce Blvd</p>
                   <p className="text-gray-500 text-sm">Tech City, TC 90210</p>
                 </div>
               </div>
 
               {/* Bill To & Details */}
-              <div className="grid grid-cols-2 gap-8 mb-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 mb-8 sm:mb-10">
                 <div>
                   <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Billed To</h3>
                   <p className="font-semibold text-gray-900">{order.billingAddress.fullName}</p>
@@ -115,8 +115,8 @@ export const InvoiceModal: React.FC<{ order: Order, isOpen: boolean, onClose: ()
               </table>
 
               {/* Totals */}
-              <div className="flex justify-end mb-12">
-                <div className="w-1/2 space-y-3">
+              <div className="flex justify-end mb-8 sm:mb-12">
+                <div className="w-full sm:w-1/2 space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Subtotal</span>
                     <span className="font-medium text-gray-900">₹{order.subtotal.toFixed(2)}</span>
@@ -143,13 +143,13 @@ export const InvoiceModal: React.FC<{ order: Order, isOpen: boolean, onClose: ()
               </div>
 
               {/* Footer */}
-              <div className="flex justify-between items-end border-t border-gray-200 pt-8">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-t border-gray-200 pt-6 sm:pt-8 gap-4">
                 <div>
                   <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Notes</h3>
                   <p className="text-xs text-gray-500 max-w-sm">Thank you for your business. For any queries regarding this invoice, please contact support.</p>
                 </div>
-                <div className="flex flex-col items-center border border-gray-200 p-2 rounded-lg">
-                  <QrCode className="w-16 h-16 text-gray-800" />
+                <div className="flex flex-col items-center border border-gray-200 p-2 rounded-lg shrink-0">
+                  <QrCode className="w-12 h-12 sm:w-16 sm:h-16 text-gray-800" />
                   <span className="text-[10px] text-gray-400 mt-1">Scan to Verify</span>
                 </div>
               </div>

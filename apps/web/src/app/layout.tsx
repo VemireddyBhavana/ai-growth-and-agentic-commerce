@@ -94,6 +94,7 @@ export default async function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
+      data-scroll-behavior="smooth"
       className={`${inter.variable} ${outfit.variable} ${jetbrainsMono.variable}`}
     >
       <body className="min-h-screen bg-background font-sans text-foreground antialiased selection:bg-brand-600 selection:text-white">
