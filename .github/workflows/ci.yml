@@ -1,0 +1,113 @@
+name: CI — Build, Test & Validate
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  ci:
+    name: Build, Test & Lint
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres_ci_ephemeral
+          POSTGRES_DB: ai_sales_assistant_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres_ci_ephemeral@localhost:5432/ai_sales_assistant_ci?schema=public
+      NODE_ENV: test
+      JWT_SECRET: ci_test_jwt_secret_minimum_32_chars_long_key
+      JWT_REFRESH_SECRET: ci_test_jwt_refresh_secret_minimum_32_chars
+      OPENAI_API_KEY: sk-ci-mock-key-not-real
+      RAZORPAY_MODE: test
+      RAZORPAY_KEY_ID: rzp_test_ci_mock_key
+      RAZORPAY_KEY_SECRET: ci_mock_razorpay_secret
+      RAZORPAY_WEBHOOK_SECRET: ci_mock_webhook_secret
+      CORS_ORIGIN: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_API_URL: http://localhost:5000/api/v1
+      NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+      NEXT_PUBLIC_RAZORPAY_KEY_ID: rzp_test_ci_mock_key
+      NEXT_PUBLIC_STORE_ID: ci-test-store
+      NEXT_PUBLIC_DATA_SOURCE_MODE: mock
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # ─── Prisma ───────────────────────────────────────────────
+      - name: Validate Prisma schema
+        run: npx prisma validate --schema apps/api/prisma/schema.prisma
+
+      - name: Generate Prisma client
+        run: npx prisma generate --schema apps/api/prisma/schema.prisma
+
+      - name: Deploy migrations to CI database
+        run: npx prisma migrate deploy --schema apps/api/prisma/schema.prisma
+
+      # ─── TypeScript ───────────────────────────────────────────
+      - name: TypeScript — API
+        run: npx tsc -p apps/api/tsconfig.json --noEmit
+
+      - name: TypeScript — Web
+        run: npx tsc -p apps/web/tsconfig.json --noEmit
+
+      # ─── Lint ─────────────────────────────────────────────────
+      - name: Lint
+        run: npm run lint
+
+      # ─── Tests ────────────────────────────────────────────────
+      - name: Run API tests (with PostgreSQL)
+        run: npx vitest run --config apps/api/vitest.config.ts
+        env:
+          RUN_DB_INTEGRATION_TESTS: 'true'
+
+      # ─── Build ────────────────────────────────────────────────
+      - name: Production build
+        run: npm run build
+
+      # ─── Secret Scan ──────────────────────────────────────────
+      - name: Secret scan — verify no credentials in tracked files
+        run: |
+          echo "Scanning for potential secrets in tracked files..."
+          FOUND=0
+          # Check for real-looking API keys (not mock/placeholder)
+          if git grep -lI 'sk-[a-zA-Z0-9]\{20,\}' -- ':!.github/' ':!*.md' ':!*.example' ':!node_modules/' 2>/dev/null | grep -v 'mock\|test\|ci\|placeholder\|example' ; then
+            echo "WARNING: Possible OpenAI key found"
+            FOUND=1
+          fi
+          if git grep -lI 'rzp_live_' -- ':!*.md' ':!*.example' ':!node_modules/' 2>/dev/null; then
+            echo "WARNING: Possible live Razorpay key found"
+            FOUND=1
+          fi
+          if [ "$FOUND" -eq 1 ]; then
+            echo "::error::Potential secrets detected in tracked files"
+            exit 1
+          fi
+          echo "✅ No obvious secrets detected in tracked files"

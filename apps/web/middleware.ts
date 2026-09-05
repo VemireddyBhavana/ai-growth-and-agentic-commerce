@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import '@/env';
 import { authMiddleware } from '@/lib/auth/middleware';
 
 export const config = {

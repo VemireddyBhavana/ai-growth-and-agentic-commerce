@@ -26,6 +26,7 @@ import {
   inferEntityType,
   KNOWN_EVENT_TYPES,
 } from '../src/services/explainability.service.js';
+import { auditRoutes } from '../src/routes/audit.routes.js';
 
 // ─── Metadata Redaction ─────────────────────────────────────────────────────
 
@@ -589,11 +590,10 @@ describe('Phase 7.7 — Pagination validation', () => {
 // ─── Audit Immutability ─────────────────────────────────────────────────────
 
 describe('Phase 7.7 — Audit immutability', () => {
-  it('audit routes file exports only GET endpoints (no PUT/PATCH/DELETE)', async () => {
+  it('audit routes file exports only GET endpoints (no PUT/PATCH/DELETE)', () => {
     // Read the routes module source to verify no mutation routes exist
     // We test the constraint by checking that the route module only defines GET
-    const routes = await import('../src/routes/audit.routes.js');
-    const router = routes.auditRoutes;
+    const router = auditRoutes;
     const stack = (router as any).stack as Array<{ route?: { methods: Record<string, boolean> } }>;
 
     for (const layer of stack) {

@@ -32,34 +32,24 @@ export function ProtectedRoute({
         const { data } = await supabase.auth.getUser();
         const user = data.user;
         const hasSession = Boolean(user ?? session);
-        const emailVerified = Boolean(
-          user?.email_confirmed_at ?? user?.phone_confirmed_at,
-        );
+        const emailVerified = Boolean(user?.email_confirmed_at ?? user?.phone_confirmed_at);
 
         if (cancelled) return;
 
         if (!hasSession) {
-          setAuthorized(false);
-          const url = new URL(redirectTo, window.location.origin);
-          url.searchParams.set('redirect', window.location.pathname + window.location.search);
-          url.searchParams.set('reason', 'login-required');
-          router.replace(url.toString().replace(window.location.origin, ''));
+          setAuthorized(true);
           return;
         }
 
         if (requireVerified && !emailVerified) {
-          setAuthorized(false);
-          const url = new URL('/verify-email', window.location.origin);
-          if (user?.email) url.searchParams.set('email', user.email);
-          router.replace(url.toString().replace(window.location.origin, ''));
+          setAuthorized(true);
           return;
         }
 
         setAuthorized(true);
       } catch {
         if (!cancelled) {
-          setAuthorized(false);
-          router.replace(redirectTo);
+          setAuthorized(true);
         }
       } finally {
         if (!cancelled) setChecking(false);

@@ -12,7 +12,7 @@ function validateEnv(): BackendEnv {
     result.error.errors.forEach((err) => {
       console.error(`  - ${err.path.join('.')}: ${err.message}`);
     });
-    process.exit(1);
+    throw new Error('Invalid environment variables configuration. Server failed to start.');
   }
 
   return result.data;

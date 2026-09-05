@@ -11,6 +11,7 @@ export const backendEnvSchema = z.object({
   JWT_REFRESH_EXPIRES_IN: z.string().default('30d'),
   OPENAI_API_KEY: z.string().min(1, 'OPENAI_API_KEY is required'),
   OPENAI_MODEL: z.string().default('gpt-4o'),
+  RAZORPAY_MODE: z.enum(['test', 'live']).default('test'),
   RAZORPAY_KEY_ID: z.string().min(1, 'RAZORPAY_KEY_ID is required'),
   RAZORPAY_KEY_SECRET: z.string().min(1, 'RAZORPAY_KEY_SECRET is required'),
   RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
@@ -26,6 +27,9 @@ export const frontendEnvSchema = z.object({
   NEXT_PUBLIC_API_URL: z.string().url().default('http://localhost:5000/api/v1'),
   NEXT_PUBLIC_SUPABASE_URL: z.string().url().default('https://placeholder.supabase.co'),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().default('placeholder-anon-key'),
+  NEXT_PUBLIC_RAZORPAY_KEY_ID: z.string().default('rzp_test_mock_key_id'),
+  NEXT_PUBLIC_STORE_ID: z.string().default('acme-retail'),
+  NEXT_PUBLIC_DATA_SOURCE_MODE: z.string().optional(),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
 });
 

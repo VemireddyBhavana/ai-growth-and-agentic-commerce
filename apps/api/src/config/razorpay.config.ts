@@ -11,6 +11,7 @@ export const razorpay = new Razorpay({
 });
 
 export const razorpayConfig = {
+  mode: env.RAZORPAY_MODE,
   keyId: env.RAZORPAY_KEY_ID,
   keySecret: env.RAZORPAY_KEY_SECRET,
   webhookSecret: env.RAZORPAY_WEBHOOK_SECRET,
