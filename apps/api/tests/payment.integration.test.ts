@@ -98,6 +98,8 @@ suite('Phase 7.6 payment API — PostgreSQL integration', () => {
   afterAll(async () => {
     // Cleanup: cascading deletes via store deletion
     await prisma.payment.deleteMany({ where: { storeId: { in: createdStoreIds } } });
+    await prisma.orderItem.deleteMany({ where: { order: { storeId: { in: createdStoreIds } } } });
+    await prisma.order.deleteMany({ where: { storeId: { in: createdStoreIds } } });
     await prisma.store.deleteMany({ where: { id: { in: createdStoreIds } } });
     await prisma.user.deleteMany({ where: { email: { contains: '@pay-test.local' } } });
     await prisma.$disconnect();
@@ -233,6 +235,9 @@ suite('Phase 7.6 payment API — PostgreSQL integration', () => {
       // Skip if webhook secret is not configured
       return;
     }
+
+    // Clear existing payment for orderId to satisfy unique constraint
+    await prisma.payment.deleteMany({ where: { orderId } });
 
     // Create a fresh payment record for webhook testing
     const testPayment = await prisma.payment.create({

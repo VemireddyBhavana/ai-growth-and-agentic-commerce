@@ -14,6 +14,7 @@ let merchantB: { userId: string; storeId: string; token: string };
 let productId = '';
 let variantId = '';
 let inactiveProductId = '';
+
 let cartId = '';
 let orderId = '';
 
@@ -79,6 +80,15 @@ suite('Phase 7.5 cart & order API — PostgreSQL integration', () => {
       })
       .expect(201);
     variantId = variant.body.data.id;
+    await prisma.inventory.create({
+      data: {
+        productId,
+        variantId,
+        quantity: 10,
+        lowStockThreshold: 2,
+        status: 'AVAILABLE',
+      },
+    });
 
     const inactive = await request(app)
       .post('/api/v1/products')
@@ -102,6 +112,8 @@ suite('Phase 7.5 cart & order API — PostgreSQL integration', () => {
   });
 
   afterAll(async () => {
+    await prisma.orderItem.deleteMany({ where: { order: { storeId: { in: createdStoreIds } } } });
+    await prisma.order.deleteMany({ where: { storeId: { in: createdStoreIds } } });
     await prisma.store.deleteMany({ where: { id: { in: createdStoreIds } } });
     await prisma.user.deleteMany({ where: { email: { contains: '@cart-test.local' } } });
     await prisma.$disconnect();
