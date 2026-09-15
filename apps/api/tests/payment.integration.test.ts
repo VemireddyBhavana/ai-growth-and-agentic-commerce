@@ -25,7 +25,7 @@ const createdStoreIds: string[] = [];
 let merchantA: { userId: string; storeId: string; token: string };
 let merchantB: { userId: string; storeId: string; token: string };
 let orderId = '';
-let paymentId = '';
+let _paymentId = '';
 
 function token(userId: string, merchantId: string): string {
   return jwt.sign(
@@ -98,6 +98,8 @@ suite('Phase 7.6 payment API — PostgreSQL integration', () => {
   afterAll(async () => {
     // Cleanup: cascading deletes via store deletion
     await prisma.payment.deleteMany({ where: { storeId: { in: createdStoreIds } } });
+    await prisma.cartItem.deleteMany({ where: { cart: { storeId: { in: createdStoreIds } } } });
+    await prisma.shoppingCart.deleteMany({ where: { storeId: { in: createdStoreIds } } });
     await prisma.orderItem.deleteMany({ where: { order: { storeId: { in: createdStoreIds } } } });
     await prisma.order.deleteMany({ where: { storeId: { in: createdStoreIds } } });
     await prisma.store.deleteMany({ where: { id: { in: createdStoreIds } } });
@@ -191,7 +193,7 @@ suite('Phase 7.6 payment API — PostgreSQL integration', () => {
         method: 'UPI',
       },
     });
-    paymentId = payment.id;
+    _paymentId = payment.id;
 
     const res = await request(app)
       .post('/api/v1/payments/verify')

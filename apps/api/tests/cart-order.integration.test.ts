@@ -112,6 +112,8 @@ suite('Phase 7.5 cart & order API — PostgreSQL integration', () => {
   });
 
   afterAll(async () => {
+    await prisma.cartItem.deleteMany({ where: { cart: { storeId: { in: createdStoreIds } } } });
+    await prisma.shoppingCart.deleteMany({ where: { storeId: { in: createdStoreIds } } });
     await prisma.orderItem.deleteMany({ where: { order: { storeId: { in: createdStoreIds } } } });
     await prisma.order.deleteMany({ where: { storeId: { in: createdStoreIds } } });
     await prisma.store.deleteMany({ where: { id: { in: createdStoreIds } } });
