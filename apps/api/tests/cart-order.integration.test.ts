@@ -325,6 +325,12 @@ suite('Phase 7.5 cart & order API — PostgreSQL integration', () => {
     const cartStillActive = await prisma.shoppingCart.findUnique({ where: { id: raceCartId } });
     expect(cartStillActive?.status).toBe('ACTIVE');
     expect(ordersAfter).toBeGreaterThan(0);
+
+    // Restore inventory for subsequent tests
+    await prisma.inventory.update({
+      where: { id: inv!.id },
+      data: { quantity: 10 },
+    });
   });
 
   it('removes cart item', async () => {
