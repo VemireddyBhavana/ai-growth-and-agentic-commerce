@@ -75,6 +75,7 @@ suite('Phase 7.6 payment API — PostgreSQL integration', () => {
         price: 1999,
         currency: 'INR',
         description: 'Payment integration test product',
+        brand: 'Test Brand',
         categoryId: category.body.data.id,
         inventory: { quantity: 50, lowStockThreshold: 5 },
       })
@@ -90,11 +91,7 @@ suite('Phase 7.6 payment API — PostgreSQL integration', () => {
     const cartId = cart.body.data.id;
 
     // Create order
-    const order = await request(app)
-      .post('/api/v1/orders')
-      .set(auth)
-      .send({ cartId })
-      .expect(201);
+    const order = await request(app).post('/api/v1/orders').set(auth).send({ cartId }).expect(201);
     orderId = order.body.data.id;
   });
 
@@ -109,10 +106,7 @@ suite('Phase 7.6 payment API — PostgreSQL integration', () => {
   // ── Authentication ──────────────────────────────────────────────────────
 
   it('rejects unauthenticated create-order', async () => {
-    await request(app)
-      .post('/api/v1/payments/create-order')
-      .send({ orderId })
-      .expect(401);
+    await request(app).post('/api/v1/payments/create-order').send({ orderId }).expect(401);
   });
 
   it('rejects unauthenticated verify', async () => {
@@ -127,9 +121,7 @@ suite('Phase 7.6 payment API — PostgreSQL integration', () => {
   });
 
   it('rejects unauthenticated payment status', async () => {
-    await request(app)
-      .get(`/api/v1/payments/order/${orderId}`)
-      .expect(401);
+    await request(app).get(`/api/v1/payments/order/${orderId}`).expect(401);
   });
 
   // ── Client Amount Manipulation ──────────────────────────────────────────
@@ -175,9 +167,7 @@ suite('Phase 7.6 payment API — PostgreSQL integration', () => {
 
   it('merchant B cannot access merchant A payment status', async () => {
     const authB = { Authorization: `Bearer ${merchantB.token}` };
-    const res = await request(app)
-      .get(`/api/v1/payments/order/${orderId}`)
-      .set(authB);
+    const res = await request(app).get(`/api/v1/payments/order/${orderId}`).set(authB);
     expect(res.status).toBe(404);
   });
 
@@ -279,10 +269,7 @@ suite('Phase 7.6 payment API — PostgreSQL integration', () => {
       created_at: Math.floor(Date.now() / 1000),
     });
 
-    const sig = crypto
-      .createHmac('sha256', webhookSecret)
-      .update(webhookBody)
-      .digest('hex');
+    const sig = crypto.createHmac('sha256', webhookSecret).update(webhookBody).digest('hex');
 
     const res = await request(app)
       .post('/api/v1/payments/webhook')
@@ -316,9 +303,7 @@ suite('Phase 7.6 payment API — PostgreSQL integration', () => {
     const auth = { Authorization: `Bearer ${merchantA.token}` };
 
     // Check all payment endpoints for secret leakage
-    const endpoints = [
-      request(app).get(`/api/v1/payments/order/${orderId}`).set(auth),
-    ];
+    const endpoints = [request(app).get(`/api/v1/payments/order/${orderId}`).set(auth)];
 
     for (const req$ of endpoints) {
       const res = await req$;

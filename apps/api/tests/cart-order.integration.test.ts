@@ -61,6 +61,7 @@ suite('Phase 7.5 cart & order API — PostgreSQL integration', () => {
         price: 1999,
         currency: 'INR',
         description: 'Integration test product',
+        brand: 'Test Brand',
         categoryId: category.body.data.id,
         inventory: { quantity: 10, lowStockThreshold: 2 },
       })
@@ -70,7 +71,12 @@ suite('Phase 7.5 cart & order API — PostgreSQL integration', () => {
     const variant = await request(app)
       .post(`/api/v1/products/${productId}/variants`)
       .set(auth)
-      .send({ sku: `CART-VAR-${suffix}`, name: 'Black', price: 2099, attributes: { color: 'black' } })
+      .send({
+        sku: `CART-VAR-${suffix}`,
+        name: 'Black',
+        price: 2099,
+        attributes: { color: 'black' },
+      })
       .expect(201);
     variantId = variant.body.data.id;
 
@@ -83,6 +89,7 @@ suite('Phase 7.5 cart & order API — PostgreSQL integration', () => {
         price: 999,
         currency: 'INR',
         description: 'Inactive',
+        brand: 'Test Brand',
         categoryId: category.body.data.id,
         inventory: { quantity: 5, lowStockThreshold: 1 },
       })
@@ -314,10 +321,7 @@ suite('Phase 7.5 cart & order API — PostgreSQL integration', () => {
       .send({ productId, variantId, quantity: 1 })
       .expect(201);
     const itemId = add.body.data.items[0].id;
-    const removed = await request(app)
-      .delete(`/api/v1/cart/items/${itemId}`)
-      .set(auth)
-      .expect(200);
+    const removed = await request(app).delete(`/api/v1/cart/items/${itemId}`).set(auth).expect(200);
     expect(removed.body.data.items).toHaveLength(0);
   });
 });

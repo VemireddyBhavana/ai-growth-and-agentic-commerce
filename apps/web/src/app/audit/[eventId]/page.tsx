@@ -15,7 +15,26 @@ export default function AuditDetailsPage() {
   const { eventId } = useParams();
   const router = useRouter();
   const events = useAuditStore((state) => state.events);
-  const event = events.find(e => e.id === eventId);
+  const isLoading = useAuditStore((state) => state.isLoading);
+  const fetchEvents = useAuditStore((state) => state.fetchEvents);
+
+  React.useEffect(() => {
+    if (events.length === 0) {
+      void fetchEvents();
+    }
+  }, [events.length, fetchEvents]);
+
+  const targetId = Array.isArray(eventId) ? eventId[0] : eventId;
+  const event = events.find((e) => e.id === targetId);
+
+  if (isLoading && !event) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col items-center justify-center p-4">
+        <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-white/60">Loading audit trace...</p>
+      </div>
+    );
+  }
 
   if (!event) {
     return (
@@ -23,7 +42,10 @@ export default function AuditDetailsPage() {
         <FileText className="w-16 h-16 text-white/20 mb-4" />
         <h1 className="text-2xl font-bold mb-2">Event Not Found</h1>
         <p className="text-white/60 mb-6">The audit event you are looking for does not exist.</p>
-        <button onClick={() => router.back()} className="bg-white/10 hover:bg-white/20 px-6 py-2 rounded-lg transition-colors">
+        <button
+          onClick={() => router.back()}
+          className="bg-white/10 hover:bg-white/20 px-6 py-2 rounded-lg transition-colors"
+        >
           Go Back
         </button>
       </div>
@@ -36,7 +58,10 @@ export default function AuditDetailsPage() {
     <div className="min-h-screen bg-[#0a0a0a] text-white py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-          <Link href="/audit" className="flex items-center text-white/60 hover:text-white transition-colors mb-4 md:mb-0">
+          <Link
+            href="/audit"
+            className="flex items-center text-white/60 hover:text-white transition-colors mb-4 md:mb-0"
+          >
             <ChevronLeft className="w-5 h-5 mr-1" />
             Back to Audit Trail
           </Link>
@@ -44,7 +69,7 @@ export default function AuditDetailsPage() {
         </div>
 
         {isFailed && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-8 flex items-start space-x-3"
@@ -52,7 +77,10 @@ export default function AuditDetailsPage() {
             <AlertTriangle className="w-6 h-6 text-red-400 shrink-0 mt-0.5" />
             <div>
               <h3 className="font-semibold text-red-400">Critical Failure Detected</h3>
-              <p className="text-sm text-red-300">This transaction failed at the payment gateway level and was automatically escalated. See the timeline for the exact failure point.</p>
+              <p className="text-sm text-red-300">
+                This transaction failed at the payment gateway level and was automatically
+                escalated. See the timeline for the exact failure point.
+              </p>
             </div>
           </motion.div>
         )}
@@ -63,14 +91,19 @@ export default function AuditDetailsPage() {
               Trace: {event.id}
             </h1>
             <p className="text-white/60">
-              Initiated on {new Date(event.timestamp).toLocaleString()} by <span className="text-white">{event.user}</span>
+              Initiated on {new Date(event.timestamp).toLocaleString()} by{' '}
+              <span className="text-white">{event.user}</span>
             </p>
           </div>
           <div className="mt-4 md:mt-0 text-left md:text-right">
             <div className="space-y-1">
               <p className="text-sm text-white/50 uppercase tracking-wider">Linked Entities</p>
-              {event.orderId && <p className="font-mono text-sm text-violet-400">Order: {event.orderId}</p>}
-              {event.paymentId && <p className="font-mono text-sm text-blue-400">Payment: {event.paymentId}</p>}
+              {event.orderId && (
+                <p className="font-mono text-sm text-violet-400">Order: {event.orderId}</p>
+              )}
+              {event.paymentId && (
+                <p className="font-mono text-sm text-blue-400">Payment: {event.paymentId}</p>
+              )}
             </div>
           </div>
         </div>
@@ -83,17 +116,11 @@ export default function AuditDetailsPage() {
 
           {/* Right Column: Deep Dives */}
           <div className="lg:col-span-7 space-y-8">
-            {event.aiReasoning && (
-              <AIExplainabilityPanel reasoning={event.aiReasoning} />
-            )}
-            
-            {event.securityDetails && (
-              <SecurityPanel security={event.securityDetails} />
-            )}
-            
-            {event.paymentDetails && (
-              <PaymentDetailsPanel payment={event.paymentDetails} />
-            )}
+            {event.aiReasoning && <AIExplainabilityPanel reasoning={event.aiReasoning} />}
+
+            {event.securityDetails && <SecurityPanel security={event.securityDetails} />}
+
+            {event.paymentDetails && <PaymentDetailsPanel payment={event.paymentDetails} />}
           </div>
         </div>
       </div>
