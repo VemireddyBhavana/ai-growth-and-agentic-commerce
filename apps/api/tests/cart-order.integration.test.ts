@@ -326,15 +326,22 @@ suite('Phase 7.5 cart & order API — PostgreSQL integration', () => {
     expect(cartStillActive?.status).toBe('ACTIVE');
     expect(ordersAfter).toBeGreaterThan(0);
 
-    // Restore inventory for subsequent tests
+    // Restore inventory and clear lingering cart for subsequent tests
     await prisma.inventory.update({
       where: { id: inv!.id },
-      data: { quantity: 10 },
+      data: { quantity: 10, reservedQuantity: 0 },
+    });
+    await prisma.cartItem.deleteMany({ where: { cartId: raceCartId } });
+    await prisma.shoppingCart.update({
+      where: { id: raceCartId },
+      data: { status: 'CHECKED_OUT' },
     });
   });
 
   it('removes cart item', async () => {
     const auth = { Authorization: `Bearer ${merchantA.token}` };
+    // Clear any lingering active cart from previous tests
+    await request(app).delete('/api/v1/cart').set(auth);
     const add = await request(app)
       .post('/api/v1/cart/items')
       .set(auth)
