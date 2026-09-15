@@ -144,7 +144,7 @@ export const useAuditStore = create<AuditState>((set, get) => ({
           status: (e.status || 'success').toLowerCase() as AuditEventStatus,
           riskLevel: (e.metadata?.riskLevel || 'low').toLowerCase() as RiskLevel,
           confidenceScore: e.metadata?.confidenceScore || 90,
-          timeline: e.timeline || generateMockTimeline(Date.now() - 120200),
+          timeline: Array.isArray(e.timeline) ? e.timeline : [],
           aiReasoning: e.aiReasoning,
           paymentDetails: e.paymentDetails,
           securityDetails: e.securityDetails,

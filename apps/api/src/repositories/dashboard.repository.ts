@@ -138,10 +138,7 @@ export class DashboardRepository {
   private async getStoreInfo(storeIdOrSlug: string) {
     let store = await prisma.store.findFirst({
       where: {
-        OR: [
-          { id: storeIdOrSlug },
-          { slug: storeIdOrSlug },
-        ],
+        OR: [{ id: storeIdOrSlug }, { slug: storeIdOrSlug }],
       },
       select: { id: true, name: true, slug: true },
     });
@@ -221,10 +218,7 @@ export class DashboardRepository {
       },
     });
 
-    // Generate sparkline data (simplified - in production would aggregate from historical data)
-    const sparklineData = Array.from({ length: 14 }, (_, i) => ({
-      v: Math.floor(Math.random() * 50) + 30 + i * 5,
-    }));
+    const sparklineData = [{ v: revenue }];
 
     return [
       {
@@ -244,8 +238,8 @@ export class DashboardRepository {
         key: 'orders',
         label: "Today's Orders",
         value: completedOrders,
-        trend: 24.6,
-        trendUp: true,
+        trend: 0,
+        trendUp: false,
         icon: 'orders',
         tone: 'from-ai-cyan/20 to-ai-cyan/10 text-ai-cyan border-ai-cyan/20',
         glow: 'cyan',
@@ -258,8 +252,8 @@ export class DashboardRepository {
         value: conversionRate,
         suffix: '%',
         decimals: 2,
-        trend: 5.4,
-        trendUp: true,
+        trend: 0,
+        trendUp: false,
         icon: 'conversion',
         tone: 'from-ai-emerald/20 to-ai-emerald/10 text-ai-emerald border-ai-emerald/20',
         glow: 'emerald',
@@ -271,8 +265,8 @@ export class DashboardRepository {
         label: 'Average Order Value',
         value: aov,
         prefix: '₹ ',
-        trend: 3.1,
-        trendUp: true,
+        trend: 0,
+        trendUp: false,
         icon: 'aov',
         tone: 'from-ai-violet/20 to-ai-violet/10 text-ai-violet border-ai-violet/20',
         glow: 'violet',
@@ -283,8 +277,8 @@ export class DashboardRepository {
         key: 'ai-convos',
         label: 'Active AI Conversations',
         value: activeAiSessions,
-        trend: 42.3,
-        trendUp: true,
+        trend: 0,
+        trendUp: false,
         icon: 'conversations',
         tone: 'from-ai-violet/20 via-brand-500/15 to-ai-cyan/10 text-ai-violet border-ai-violet/25',
         glow: 'violet',
@@ -297,7 +291,7 @@ export class DashboardRepository {
         value: revenueGrowth,
         suffix: '%',
         decimals: 1,
-        trend: 8.6,
+        trend: revenueGrowth,
         trendUp: revenueGrowth >= 0,
         icon: 'growth',
         tone: 'from-ai-emerald/20 via-ai-cyan/15 to-brand-500/10 text-ai-emerald border-ai-emerald/25',
@@ -314,30 +308,6 @@ export class DashboardRepository {
   private async getRevenueData(storeId: string): Promise<RevenuePoint[]> {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const data: RevenuePoint[] = [];
-    const dayCurve = [0.68, 0.52, 0.77, 0.92, 0.88, 0.96, 1.0];
-
-    const [totalAggregate, aiAggregate] = await Promise.all([
-      prisma.order.aggregate({
-        where: {
-          storeId,
-          paymentStatus: { in: ['COMPLETED', 'CAPTURED'] },
-        },
-        _sum: { total: true },
-      }),
-      prisma.order.aggregate({
-        where: {
-          storeId,
-          paymentStatus: { in: ['COMPLETED', 'CAPTURED'] },
-          aiAssisted: true,
-        },
-        _sum: { total: true },
-      }),
-    ]);
-
-    const storeTotalRevenue = Number(totalAggregate._sum.total || 131126.5);
-    const storeAiRevenue = Number(aiAggregate._sum.total || Math.round(storeTotalRevenue * 0.72));
-    const aiProportion = storeTotalRevenue > 0 ? storeAiRevenue / storeTotalRevenue : 0.72;
-
     for (let i = 6; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
@@ -366,16 +336,10 @@ export class DashboardRepository {
         }),
       ]);
 
-      let total = Number(totalRevenue._sum.total || 0);
+      const total = Number(totalRevenue._sum.total || 0);
       let ai = Number(aiRevenue._sum.total || 0);
 
-      if (total === 0 && storeTotalRevenue > 0) {
-        const factor = dayCurve[6 - i] ?? 0.75;
-        total = Math.round(storeTotalRevenue * factor);
-        ai = Math.round(total * aiProportion);
-      } else if (ai >= total && total > 0) {
-        ai = Math.round(total * Math.min(0.85, aiProportion));
-      }
+      ai = Math.min(ai, total);
 
       data.push({
         day: days[date.getDay()]!,
@@ -394,23 +358,6 @@ export class DashboardRepository {
   private async getOrdersData(storeId: string): Promise<OrdersPoint[]> {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const data: OrdersPoint[] = [];
-    const dayCurve = [0.7, 0.55, 0.8, 0.9, 0.85, 0.95, 1.0];
-
-    const [totalPaid, totalPending, totalRefunded] = await Promise.all([
-      prisma.order.count({
-        where: {
-          storeId,
-          status: { in: ['CONFIRMED', 'DELIVERED', 'SHIPPED', 'PROCESSING'] },
-        },
-      }),
-      prisma.order.count({
-        where: { storeId, status: 'PENDING' },
-      }),
-      prisma.order.count({
-        where: { storeId, status: 'REFUNDED' },
-      }),
-    ]);
-
     for (let i = 6; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
@@ -419,7 +366,7 @@ export class DashboardRepository {
       const nextDate = new Date(date);
       nextDate.setDate(nextDate.getDate() + 1);
 
-      let [paid, pending, refunded] = await Promise.all([
+      const [paid, pending, refunded] = await Promise.all([
         prisma.order.count({
           where: {
             storeId,
@@ -443,13 +390,6 @@ export class DashboardRepository {
         }),
       ]);
 
-      if (paid === 0 && totalPaid > 0) {
-        const factor = dayCurve[6 - i] ?? 0.7;
-        paid = Math.max(1, Math.round(totalPaid * factor));
-        pending = Math.max(0, Math.round(totalPending * factor));
-        refunded = Math.max(0, Math.round(totalRefunded * factor * 0.5));
-      }
-
       data.push({
         day: days[date.getDay()]!,
         paid,
@@ -468,24 +408,21 @@ export class DashboardRepository {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const [todaySessions, todayOrders, totalSessions, totalOrders] = await Promise.all([
+    const [todaySessions, todayOrders] = await Promise.all([
       prisma.session.count({
         where: { storeId, createdAt: { gte: today } },
       }),
       prisma.order.count({
         where: { storeId, createdAt: { gte: today } },
       }),
-      prisma.session.count({ where: { storeId } }),
-      prisma.order.count({ where: { storeId } }),
     ]);
 
-    const activeOrders = Math.max(todayOrders, totalOrders, 8);
-    const visitors = Math.max(todaySessions, totalSessions * 12, activeOrders * 8, 64);
-    const viewedProducts = Math.round(visitors * 0.62);
-    const searched = Math.round(visitors * 0.44);
-    const addedToCart = Math.round(visitors * 0.28);
-    const checkoutStarted = Math.round(visitors * 0.18);
-    const purchaseCount = activeOrders;
+    const visitors = todaySessions;
+    const viewedProducts = 0;
+    const searched = 0;
+    const addedToCart = 0;
+    const checkoutStarted = 0;
+    const purchaseCount = todayOrders;
 
     return [
       {
@@ -550,7 +487,7 @@ export class DashboardRepository {
 
     for (let i = 0; i < hours.length; i++) {
       const isNow = hours[i] === 'Now';
-      const hour = isNow ? currentHour : (parseInt(hours[i]!, 10) || 0);
+      const hour = isNow ? currentHour : parseInt(hours[i]!, 10) || 0;
       const hourStart = new Date(now);
       hourStart.setHours(hour, 0, 0, 0);
 
@@ -582,7 +519,7 @@ export class DashboardRepository {
         hr: hours[i]!,
         sessions,
         conversions: conversations,
-        avgResp: 2.4 + Math.random() * 0.8,
+        avgResp: 0,
       });
     }
 
@@ -593,33 +530,7 @@ export class DashboardRepository {
    * Get conversation statistics
    */
   private getConversationStats(_storeId: string): ConversationStat[] {
-    // Simplified stats - in production would calculate from actual data
-    return [
-      {
-        label: 'Total Sessions',
-        value: 1842,
-        icon: 'sessions',
-        tone: 'text-brand-500 bg-brand-500/10 border-brand-500/20',
-      },
-      {
-        label: 'Products Shown',
-        value: 12847,
-        icon: 'shown',
-        tone: 'text-ai-violet bg-ai-violet/10 border-ai-violet/20',
-      },
-      {
-        label: 'Recommendations Accepted',
-        value: 4821,
-        icon: 'accepted',
-        tone: 'text-ai-cyan bg-ai-cyan/10 border-ai-cyan/20',
-      },
-      {
-        label: 'Orders Assisted',
-        value: 384,
-        icon: 'assisted',
-        tone: 'text-ai-emerald bg-ai-emerald/10 border-ai-emerald/20',
-      },
-    ];
+    return [];
   }
 
   /**
@@ -652,11 +563,11 @@ export class DashboardRepository {
           sku: product.sku,
           revenue,
           units,
-          views: Math.floor(Math.random() * 5000) + 1000,
-          conversion: units > 0 ? (units / (units + Math.floor(Math.random() * 100))) * 100 : 0,
-          trend: Math.floor(Math.random() * 40) - 10,
-          trendUp: Math.random() > 0.3,
-          aiBoosted: Math.random() > 0.5,
+          views: 0,
+          conversion: 0,
+          trend: 0,
+          trendUp: false,
+          aiBoosted: false,
           tone: 'from-brand-600/25 via-brand-500/15 to-transparent text-brand-500 border-brand-500/20',
         };
       })
@@ -690,53 +601,18 @@ export class DashboardRepository {
       });
     }
 
-    const locations = [
-      'Mumbai',
-      'Bengaluru',
-      'Delhi',
-      'Chennai',
-      'Kolkata',
-      'Hyderabad',
-      'Pune',
-      'Ahmedabad',
-    ];
-    const countries = ['India', 'India', 'India', 'India', 'India', 'India', 'India', 'India'];
-    const flags = ['🇮🇳', '🇮🇳', '🇮🇳', '🇮🇳', '🇮🇳', '🇮🇳', '🇮🇳', '🇮🇳'];
-    const pages = [
-      '/products/nexus-pro-earbuds',
-      '/products/aura-smart-watch',
-      '/bundles',
-      '/cart',
-      '/checkout',
-      '/search',
-    ];
-    const activities = [
-      'Viewing product',
-      'AI recommending',
-      'Added to cart',
-      'Searching',
-      'Payment info',
-    ];
-    const activityKinds: Array<'view' | 'ai' | 'cart' | 'search' | 'checkout'> = [
-      'view',
-      'ai',
-      'cart',
-      'search',
-      'checkout',
-    ];
-
-    return (sessions as SessionWithCustomer[]).map((session, index: number) => ({
+    return (sessions as SessionWithCustomer[]).map((session) => ({
       id: session.id,
-      location: locations[index % locations.length]!,
-      country: countries[index % countries.length]!,
-      flag: flags[index % flags.length]!,
+      location: 'Unknown',
+      country: 'Unknown',
+      flag: '',
       device: session.device as 'mobile' | 'desktop',
-      page: pages[index % pages.length]!,
-      activity: activities[index % activities.length]!,
-      duration: `${Math.floor(Math.random() * 10) + 1}m ${Math.floor(Math.random() * 60)}s`,
+      page: 'Unknown',
+      activity: session.aiEnabled ? 'AI active' : 'Active session',
+      duration: 'Unavailable',
       aiActive: session.aiEnabled,
       tone: 'from-brand-600/25 to-brand-500/10 text-brand-500 border-brand-500/20',
-      activityKind: activityKinds[index % activityKinds.length]!,
+      activityKind: session.aiEnabled ? 'ai' : 'view',
     }));
   }
 
@@ -744,76 +620,14 @@ export class DashboardRepository {
    * Get AI insights
    */
   private getAiInsights(_storeId: string): Insight[] {
-    return [
-      {
-        id: 'i1',
-        title: 'Wireless Earbuds converting 38% better',
-        detail: 'AI bundling + urgency messaging drove exceptional lift on Nexus Pro SKU.',
-        impact: '+₹2.84L revenue',
-        impactTone: 'positive',
-        icon: 'bag',
-        tone: 'from-brand-600/25 via-brand-500/15 to-transparent text-brand-500 border-brand-500/20',
-        tag: 'Conversion',
-      },
-      {
-        id: 'i2',
-        title: 'Customers respond best to Bundle A',
-        detail: 'Home Essentials Kit has 2.3× higher attachment rate than Bundle B.',
-        impact: 'AOV +23.4%',
-        impactTone: 'positive',
-        icon: 'target',
-        tone: 'from-ai-violet/25 via-ai-violet/15 to-transparent text-ai-violet border-ai-violet/20',
-        tag: 'Bundling',
-      },
-      {
-        id: 'i3',
-        title: 'Cart abandonment reduced 21%',
-        detail: 'AI nudges + timer checkouts recovered 184 extra carts this week.',
-        impact: '+₹1.48L recovered',
-        impactTone: 'positive',
-        icon: 'cart',
-        tone: 'from-ai-emerald/25 via-ai-emerald/15 to-transparent text-ai-emerald border-ai-emerald/20',
-        tag: 'Recovery',
-      },
-    ];
+    return [];
   }
 
   /**
    * Get smart recommendations
    */
   private getSmartRecommendations(_storeId: string): Recommendation[] {
-    return [
-      {
-        id: 'r1',
-        title: 'Launch "Buy 2, Get 15% Off" campaign',
-        subtitle: 'On Aura Smart Watch + 2 accessories. Targets 4.2K cart abandoners.',
-        kind: 'campaign',
-        roi: 'Est. +₹4.8L / mo',
-        effort: 'Low',
-        icon: 'volume',
-        tone: 'from-brand-600/25 via-brand-500/15 to-transparent text-brand-500 border-brand-500/20',
-      },
-      {
-        id: 'r2',
-        title: 'Add Free Shipping threshold at ₹2,499',
-        subtitle: 'Lifts AOV by nudging users from ₹2,100 → ₹2,499 (+19%).',
-        kind: 'pricing',
-        roi: 'Est. +₹2.2L / mo',
-        effort: 'Low',
-        icon: 'gift',
-        tone: 'from-ai-emerald/25 via-ai-emerald/15 to-transparent text-ai-emerald border-ai-emerald/20',
-      },
-      {
-        id: 'r3',
-        title: 'AI upsell: Speaker + Earbuds bundle',
-        subtitle: '38% attachment rate on similar SKUs. Auto-apply at checkout.',
-        kind: 'bundle',
-        roi: 'Est. +₹3.1L / mo',
-        effort: 'Medium',
-        icon: 'bulb',
-        tone: 'from-ai-violet/25 via-ai-violet/15 to-transparent text-ai-violet border-ai-violet/20',
-      },
-    ];
+    return [];
   }
 
   /**
@@ -899,61 +713,7 @@ export class DashboardRepository {
    * Get AI performance metrics
    */
   private getAiPerformanceMetrics(_storeId: string): AiMetric[] {
-    return [
-      {
-        label: 'Confidence Score',
-        value: 92.4,
-        suffix: '%',
-        decimals: 1,
-        target: 95,
-        icon: 'confidence',
-        tone: 'from-brand-600/30 via-brand-500/15 to-transparent text-brand-500 dark:text-brand-400 border-brand-500/25',
-        description: 'AI recommendation quality against merchant goals',
-        trend: { value: 3.8, up: true },
-      },
-      {
-        label: 'Average Response Time',
-        value: 2.4,
-        suffix: 's',
-        decimals: 1,
-        target: 3,
-        icon: 'latency',
-        tone: 'from-ai-cyan/30 via-ai-cyan/15 to-transparent text-ai-cyan border-ai-cyan/25',
-        description: 'Median time to first AI reply across channels',
-        trend: { value: 12.6, up: true },
-      },
-      {
-        label: 'Successful Recommendations',
-        value: 4821,
-        target: 5000,
-        icon: 'recs',
-        tone: 'from-ai-emerald/30 via-ai-emerald/15 to-transparent text-ai-emerald border-ai-emerald/25',
-        description: 'Accepted product / bundle suggestions this week',
-        trend: { value: 28.4, up: true },
-      },
-      {
-        label: 'Checkout Success Rate',
-        value: 78.6,
-        suffix: '%',
-        decimals: 1,
-        target: 80,
-        icon: 'checkout',
-        tone: 'from-ai-violet/30 via-ai-violet/15 to-transparent text-ai-violet border-ai-violet/25',
-        description: 'Users reaching checkout who completed payment',
-        trend: { value: 6.2, up: true },
-      },
-      {
-        label: 'Conversion Lift',
-        value: 24.8,
-        suffix: '%',
-        decimals: 1,
-        target: 30,
-        icon: 'lift',
-        tone: 'from-amber-500/30 via-amber-500/15 to-transparent text-amber-400 border-amber-500/25',
-        description: 'Incremental conversion vs baseline (no AI)',
-        trend: { value: 8.6, up: true },
-      },
-    ];
+    return [];
   }
 
   /**

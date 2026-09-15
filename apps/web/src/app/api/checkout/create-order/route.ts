@@ -2,13 +2,23 @@ import { NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
 import { logAuditEvent } from '@/lib/auditLogger';
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || 'rzp_secret_placeholder',
-});
-
 export async function POST(req: Request) {
   try {
+    const keyId = process.env.RAZORPAY_KEY_ID;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    if (
+      !keyId ||
+      !keySecret ||
+      keyId.includes('placeholder') ||
+      keySecret.includes('placeholder')
+    ) {
+      return NextResponse.json(
+        { error: 'Razorpay credentials are not configured' },
+        { status: 503 }
+      );
+    }
+
+    const razorpay = new Razorpay({ key_id: keyId, key_secret: keySecret });
     const body = await req.json();
     const { amount, currency = 'INR', receipt = 'receipt_1234' } = body;
 
@@ -35,9 +45,6 @@ export async function POST(req: Request) {
       status: 'ERROR',
       details: { error: error.message },
     });
-    return NextResponse.json(
-      { error: 'Failed to create order' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
   }
 }
