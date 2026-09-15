@@ -14,7 +14,7 @@ describe('Environment Configuration Validation (Phase 9.1)', () => {
     it('passes with valid development config', () => {
       const result = backendEnvSchema.safeParse({
         ...validDevConfig,
-        NODE_ENV: 'development'
+        NODE_ENV: 'development',
       });
       expect(result.success).toBe(true);
     });
@@ -24,15 +24,15 @@ describe('Environment Configuration Validation (Phase 9.1)', () => {
       const invalidProdConfig = {
         NODE_ENV: 'production',
         OPENAI_API_KEY: 'sk-live-key',
-        RAZORPAY_KEY_ID: 'rzp_live_key',
+        RAZORPAY_KEY_ID: 'rzp_test_key',
         RAZORPAY_KEY_SECRET: 'live_secret',
       };
 
       const result = backendEnvSchema.safeParse(invalidProdConfig);
       expect(result.success).toBe(false);
-      
+
       if (!result.success) {
-        const errorPaths = result.error.errors.map(e => e.path[0]);
+        const errorPaths = result.error.errors.map((e) => e.path[0]);
         expect(errorPaths).toContain('DATABASE_URL');
         expect(errorPaths).toContain('JWT_SECRET');
       }

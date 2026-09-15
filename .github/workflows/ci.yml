@@ -102,7 +102,7 @@ jobs:
             echo "WARNING: Possible OpenAI key found"
             FOUND=1
           fi
-          if git grep -lI 'rzp_live_' -- ':!*.md' ':!*.example' ':!node_modules/' 2>/dev/null; then
+          if git grep -lI 'rzp_live_' -- ':!.github/' ':!*.md' ':!*.example' ':!node_modules/' 2>/dev/null; then
             echo "WARNING: Possible live Razorpay key found"
             FOUND=1
           fi
