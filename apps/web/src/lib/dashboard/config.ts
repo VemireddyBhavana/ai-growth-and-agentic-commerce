@@ -63,7 +63,7 @@ export const defaultDashboardConfig: DashboardConfig = {
   // 'api' = Option A (Full real data)
   // 'hybrid' = Option B (API with mock fallback)
   // 'mock' = Option C (Mock data only)
-  dataSourceMode: 'api',
+  dataSourceMode: 'hybrid',
 
   apiUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1',
   storeId: process.env.NEXT_PUBLIC_STORE_ID || 'acme-retail',
