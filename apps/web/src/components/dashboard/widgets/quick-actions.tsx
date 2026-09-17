@@ -1,6 +1,5 @@
-'use client';
-
 import * as React from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
@@ -15,6 +14,8 @@ import {
 } from 'lucide-react';
 import { GlassCard } from '../shared';
 import { cn } from '@/lib/utils';
+
+const MotionLink = motion.create(Link);
 
 type QuickAction = {
   key: string;
@@ -83,25 +84,28 @@ function PremiumActionButton({ action, idx }: { action: QuickAction; idx: number
   const [isHovered, setIsHovered] = React.useState(false);
 
   return (
-    <motion.button
+    <MotionLink
       key={action.key}
-      type="button"
-      onClick={() => router.push(action.href)}
+      href={action.href}
+      prefetch={true}
       initial={{ opacity: 0, y: 20, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.5, delay: 0.18 + idx * 0.08, ease: [0.22, 1, 0.36, 1] }}
-      onMouseEnter={() => setIsHovered(true)}
+      onMouseEnter={() => {
+        setIsHovered(true);
+        router.prefetch(action.href);
+      }}
       onMouseLeave={() => setIsHovered(false)}
       whileHover={{ y: -5, scale: 1.03 }}
       whileTap={{ scale: 0.97 }}
-      className="group relative aspect-square min-h-[124px] rounded-2xl border border-white/10 dark:border-white/10 bg-background/50 dark:bg-obsidian-950/50 p-4 flex flex-col items-start justify-between overflow-hidden hover:border-brand-500/30 transition-all duration-300"
+      className="group relative aspect-square min-h-[124px] rounded-2xl border border-white/10 dark:border-white/10 bg-background/50 dark:bg-obsidian-950/50 p-4 flex flex-col items-start justify-between overflow-hidden hover:border-brand-500/30 transition-all duration-300 cursor-pointer"
     >
       {/* Animated background gradient */}
       <motion.div
         aria-hidden
         className={cn(
           'absolute -right-10 -bottom-12 w-36 h-36 rounded-full blur-2xl opacity-40 transition-opacity duration-300 bg-gradient-to-br',
-          action.tone,
+          action.tone
         )}
         animate={{
           opacity: isHovered ? 0.75 : 0.4,
@@ -135,14 +139,12 @@ function PremiumActionButton({ action, idx }: { action: QuickAction; idx: number
         <motion.div
           className={cn(
             'relative p-2.5 rounded-xl text-white shadow-[0_0_20px_-4px_rgba(0,0,0,0.4)] bg-gradient-to-br',
-            action.tone,
+            action.tone
           )}
           whileHover={{ scale: 1.1, rotate: 5 }}
           transition={{ duration: 0.3 }}
         >
-          <motion.div
-            className="absolute inset-0 rounded-xl bg-white/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity"
-          />
+          <motion.div className="absolute inset-0 rounded-xl bg-white/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
           <Icon className="w-4.5 h-4.5 relative z-10" strokeWidth={2.1} />
         </motion.div>
         {action.hotkey && (
@@ -183,7 +185,7 @@ function PremiumActionButton({ action, idx }: { action: QuickAction; idx: number
           </motion.div>
         </div>
       </div>
-    </motion.button>
+    </MotionLink>
   );
 }
 

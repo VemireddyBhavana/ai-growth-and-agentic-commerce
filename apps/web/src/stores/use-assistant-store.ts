@@ -35,7 +35,8 @@ const INITIAL_CHAT_MESSAGES: ChatMessage[] = [
   {
     id: 'msg-ai-1',
     role: 'assistant',
-    content: 'Hello! 👋 I found some great gaming laptops within your budget. Here are my top picks:',
+    content:
+      'Hello! 👋 I found some great gaming laptops within your budget. Here are my top picks:',
     timestamp: new Date(Date.now() - 3 * 60000 + 5000).toISOString(),
     status: 'complete',
     recommendations: [
@@ -240,7 +241,7 @@ export const useAssistantStore = create<AssistantState>()(
           // Layout
           isSidebarOpen: true,
           isRightPanelOpen: true,
-          activeRightPanelTab: 'insights',
+          activeRightPanelTab: 'cart',
           isMobileDrawerOpen: false,
 
           // Modals
@@ -261,15 +262,19 @@ export const useAssistantStore = create<AssistantState>()(
 
           // Commerce
           cart: [
-            { product: ASSISTANT_CATALOG[0], quantity: 1, addedAt: new Date(Date.now() - 120000).toISOString() },
-            { 
+            {
+              product: ASSISTANT_CATALOG[0],
+              quantity: 1,
+              addedAt: new Date(Date.now() - 120000).toISOString(),
+            },
+            {
               product: {
                 ...ASSISTANT_CATALOG[3],
                 name: 'Logitech G102 Gaming Mouse + Accessories Package',
                 price: 9699,
-              }, 
-              quantity: 1, 
-              addedAt: new Date(Date.now() - 60000).toISOString() 
+              },
+              quantity: 1,
+              addedAt: new Date(Date.now() - 60000).toISOString(),
             },
           ],
           savedProducts: [ASSISTANT_CATALOG[0], ASSISTANT_CATALOG[2]],
@@ -277,7 +282,9 @@ export const useAssistantStore = create<AssistantState>()(
             {
               id: 'ord-sample-01',
               orderNumber: 'NX-20260830-891',
-              items: [{ product: ASSISTANT_CATALOG[1], quantity: 1, addedAt: new Date().toISOString() }],
+              items: [
+                { product: ASSISTANT_CATALOG[1], quantity: 1, addedAt: new Date().toISOString() },
+              ],
               subtotal: 2499,
               discount: 0,
               tax: 449.82,
@@ -300,7 +307,11 @@ export const useAssistantStore = create<AssistantState>()(
               savings: 1500,
             },
           ],
-          recentSearches: ['wireless earbuds under 3000', 'smartwatch with amoled', 'desk lamp led'],
+          recentSearches: [
+            'wireless earbuds under 3000',
+            'smartwatch with amoled',
+            'desk lamp led',
+          ],
           settings: DEFAULT_SETTINGS,
           currentInsights: null,
 
@@ -393,9 +404,10 @@ export const useAssistantStore = create<AssistantState>()(
             get().addRecentSearch(trimmed);
 
             // Update session with user message and pending assistant message
-            const currentSession = state.sessions.find((s) => s.id === state.activeSessionId) || state.sessions[0];
+            const currentSession =
+              state.sessions.find((s) => s.id === state.activeSessionId) || state.sessions[0];
             const updatedMessages = [...currentSession.messages, userMsg, pendingAiMsg];
-            
+
             // Auto generate title if it was first message
             const title =
               currentSession.messages.length <= 1
@@ -440,10 +452,20 @@ export const useAssistantStore = create<AssistantState>()(
                 if (response.ok) {
                   result = await response.json();
                 } else {
-                  result = await processShoppingAssistantMessage(trimmed, [], state.settings, state.cart);
+                  result = await processShoppingAssistantMessage(
+                    trimmed,
+                    [],
+                    state.settings,
+                    state.cart
+                  );
                 }
               } catch {
-                result = await processShoppingAssistantMessage(trimmed, [], state.settings, state.cart);
+                result = await processShoppingAssistantMessage(
+                  trimmed,
+                  [],
+                  state.settings,
+                  state.cart
+                );
               }
 
               // Update AI message with complete result
@@ -580,7 +602,9 @@ export const useAssistantStore = create<AssistantState>()(
           // Recent Searches
           addRecentSearch: (query) =>
             set((state) => {
-              const filtered = state.recentSearches.filter((s) => s.toLowerCase() !== query.toLowerCase());
+              const filtered = state.recentSearches.filter(
+                (s) => s.toLowerCase() !== query.toLowerCase()
+              );
               return { recentSearches: [query, ...filtered].slice(0, 8) };
             }),
 

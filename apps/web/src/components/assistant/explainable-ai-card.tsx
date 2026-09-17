@@ -47,29 +47,27 @@ export const ExplainableAiCard: React.FC<ExplainableAiCardProps> = ({
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-3.5 py-2.5 flex items-center justify-between text-left hover:bg-white/[0.03] transition-colors group"
+        className="w-full px-3 py-2 flex items-center justify-between text-left hover:bg-white/[0.04] transition-colors group gap-1.5"
         aria-expanded={isExpanded}
         aria-label="Toggle Explainable AI reasoning breakdown"
       >
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="p-1 rounded-md bg-violet-500/15 text-violet-400 border border-violet-500/20 group-hover:scale-105 transition-transform">
-            <Sparkles className="w-3.5 h-3.5" />
+        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+          <div className="p-1 rounded-md bg-violet-500/15 text-violet-400 border border-violet-500/20 shrink-0">
+            <Sparkles className="w-3 h-3" />
           </div>
-          <div className="min-w-0">
-            <span className="text-xs font-semibold text-zinc-200 flex items-center gap-1.5">
-              Explainable AI Match
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-300 border border-violet-500/30">
-                {explainability.confidenceScore}% Confidence
-              </span>
-            </span>
-          </div>
+          <span className="text-[11px] font-semibold text-zinc-200 truncate">AI Match</span>
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-300 border border-violet-500/30 shrink-0">
+            {explainability.confidenceScore}%
+          </span>
         </div>
 
-        <div className="flex items-center gap-2 text-zinc-400 group-hover:text-zinc-200">
-          <span className="text-[11px] text-zinc-400 hidden sm:inline">
-            {isExpanded ? 'Hide breakdown' : 'Why this pick?'}
-          </span>
-          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        <div className="flex items-center gap-1 text-zinc-400 group-hover:text-zinc-200 shrink-0">
+          <span className="text-[10px] text-zinc-400">{isExpanded ? 'Hide' : 'Why?'}</span>
+          {isExpanded ? (
+            <ChevronUp className="w-3.5 h-3.5" />
+          ) : (
+            <ChevronDown className="w-3.5 h-3.5" />
+          )}
         </div>
       </button>
 
@@ -93,7 +91,9 @@ export const ExplainableAiCard: React.FC<ExplainableAiCardProps> = ({
             <div>
               <div className="flex justify-between text-[11px] mb-1 font-mono">
                 <span className="text-zinc-400">Match Confidence</span>
-                <span className="text-zinc-200 font-semibold">{explainability.confidenceScore}%</span>
+                <span className="text-zinc-200 font-semibold">
+                  {explainability.confidenceScore}%
+                </span>
               </div>
               <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
                 <motion.div
@@ -113,7 +113,10 @@ export const ExplainableAiCard: React.FC<ExplainableAiCardProps> = ({
                   <Info className="w-3 h-3 text-cyan-400" />
                   <span>Customer Intent</span>
                 </div>
-                <div className="text-zinc-200 font-medium truncate" title={explainability.customerIntent}>
+                <div
+                  className="text-zinc-200 font-medium truncate"
+                  title={explainability.customerIntent}
+                >
                   {explainability.customerIntent}
                 </div>
               </div>
@@ -124,7 +127,10 @@ export const ExplainableAiCard: React.FC<ExplainableAiCardProps> = ({
                   <DollarSign className="w-3 h-3 text-emerald-400" />
                   <span>Price Match</span>
                 </div>
-                <div className="text-zinc-200 font-medium truncate" title={explainability.priceMatch}>
+                <div
+                  className="text-zinc-200 font-medium truncate"
+                  title={explainability.priceMatch}
+                >
                   {explainability.priceMatch}
                 </div>
               </div>
@@ -135,7 +141,10 @@ export const ExplainableAiCard: React.FC<ExplainableAiCardProps> = ({
                   <Box className="w-3 h-3 text-amber-400" />
                   <span>Inventory Stock</span>
                 </div>
-                <div className="text-zinc-200 font-medium truncate" title={explainability.inventoryAvailability}>
+                <div
+                  className="text-zinc-200 font-medium truncate"
+                  title={explainability.inventoryAvailability}
+                >
                   {explainability.inventoryAvailability}
                 </div>
               </div>

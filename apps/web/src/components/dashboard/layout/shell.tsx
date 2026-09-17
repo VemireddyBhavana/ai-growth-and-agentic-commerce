@@ -37,6 +37,28 @@ export function DashboardShell({ children, merchantName }: DashboardShellProps) 
     else setActiveNav('dashboard');
   }, [pathname]);
 
+  React.useEffect(() => {
+    // Eagerly prefetch all primary routes into Next.js router cache for 0s instant transitions
+    const routes = [
+      '/dashboard',
+      '/assistant',
+      '/products',
+      '/orders',
+      '/customers',
+      '/analytics',
+      '/audit',
+      '/payments',
+      '/settings',
+    ];
+    routes.forEach((r) => {
+      try {
+        router.prefetch(r);
+      } catch {
+        // Prefetch failure is non-blocking; ignore for resilience.
+      }
+    });
+  }, [router]);
+
   const handleNavSelect = (key: string) => {
     setActiveNav(key);
     setSidebarOpen(false);

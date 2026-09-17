@@ -1,6 +1,6 @@
-'use client';
-
 import * as React from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
@@ -22,24 +22,82 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuthActions } from '@/lib/auth/hooks/use-auth-actions';
 
+const MotionLink = motion.create(Link);
+
 export type NavItem = {
   key: string;
   label: string;
   icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
   badge?: string;
   description?: string;
+  href: string;
 };
 
 export const navItems: NavItem[] = [
-  { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, description: 'Overview and analytics' },
-  { key: 'ai-assistant', label: 'AI Assistant', icon: Sparkles, badge: 'LIVE', description: 'AI-powered sales concierge' },
-  { key: 'products', label: 'Products', icon: Package, description: 'Product catalog management' },
-  { key: 'orders', label: 'Orders', icon: ShoppingCart, description: 'Order processing and tracking' },
-  { key: 'customers', label: 'Customers', icon: Users, description: 'Customer relationship management' },
-  { key: 'analytics', label: 'Analytics', icon: BarChart3, description: 'Performance metrics and insights' },
-  { key: 'audit-trail', label: 'Audit Trail', icon: FileCheck, description: 'System activity logs' },
-  { key: 'payments', label: 'Payments', icon: CreditCard, description: 'Payment processing and settlements' },
-  { key: 'settings', label: 'Settings', icon: Settings, description: 'Account and store configuration' },
+  {
+    key: 'dashboard',
+    label: 'Dashboard',
+    icon: LayoutDashboard,
+    href: '/dashboard',
+    description: 'Overview and analytics',
+  },
+  {
+    key: 'ai-assistant',
+    label: 'AI Assistant',
+    icon: Sparkles,
+    badge: 'LIVE',
+    href: '/assistant',
+    description: 'AI-powered sales concierge',
+  },
+  {
+    key: 'products',
+    label: 'Products',
+    icon: Package,
+    href: '/products',
+    description: 'Product catalog management',
+  },
+  {
+    key: 'orders',
+    label: 'Orders',
+    icon: ShoppingCart,
+    href: '/orders',
+    description: 'Order processing and tracking',
+  },
+  {
+    key: 'customers',
+    label: 'Customers',
+    icon: Users,
+    href: '/customers',
+    description: 'Customer relationship management',
+  },
+  {
+    key: 'analytics',
+    label: 'Analytics',
+    icon: BarChart3,
+    href: '/analytics',
+    description: 'Performance metrics and insights',
+  },
+  {
+    key: 'audit-trail',
+    label: 'Audit Trail',
+    icon: FileCheck,
+    href: '/audit',
+    description: 'System activity logs',
+  },
+  {
+    key: 'payments',
+    label: 'Payments',
+    icon: CreditCard,
+    href: '/payments',
+    description: 'Payment processing and settlements',
+  },
+  {
+    key: 'settings',
+    label: 'Settings',
+    icon: Settings,
+    href: '/settings',
+    description: 'Account and store configuration',
+  },
 ];
 
 type DashboardSidebarProps = {
@@ -55,29 +113,34 @@ function PremiumNavItem({
   item,
   isActive,
   collapsed,
-  onSelect
+  onSelect,
 }: {
   item: NavItem;
   isActive: boolean;
   collapsed: boolean;
   onSelect: () => void;
 }) {
+  const router = useRouter();
   const Icon = item.icon;
   const [isHovered, setIsHovered] = React.useState(false);
 
   return (
-    <motion.button
-      type="button"
+    <MotionLink
+      href={item.href}
+      prefetch={true}
       title={collapsed ? item.label : undefined}
       onClick={onSelect}
-      onMouseEnter={() => setIsHovered(true)}
+      onMouseEnter={() => {
+        setIsHovered(true);
+        router.prefetch(item.href);
+      }}
       onMouseLeave={() => setIsHovered(false)}
       className={cn(
         'group relative w-full flex items-center rounded-xl text-[13px] font-medium transition-all duration-300',
         collapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5',
         isActive
           ? 'bg-gradient-to-r from-brand-600/20 via-ai-violet/15 to-transparent text-foreground border border-brand-500/20 shadow-[0_0_20px_-4px_rgba(99,102,241,0.3)]'
-          : 'text-muted-foreground hover:text-foreground hover:bg-white/5 border border-transparent hover:border-white/10',
+          : 'text-muted-foreground hover:text-foreground hover:bg-white/5 border border-transparent hover:border-white/10'
       )}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
@@ -98,13 +161,17 @@ function PremiumNavItem({
         <motion.div
           className={cn(
             'absolute inset-0 rounded-lg blur-md opacity-0 transition-opacity duration-300',
-            isActive ? 'bg-brand-500/30 opacity-100' : 'bg-white/10 opacity-0 group-hover:opacity-100'
+            isActive
+              ? 'bg-brand-500/30 opacity-100'
+              : 'bg-white/10 opacity-0 group-hover:opacity-100'
           )}
         />
         <Icon
           className={cn(
             'w-[18px] h-[18px] shrink-0 transition-colors relative z-10',
-            isActive ? 'text-brand-500 dark:text-brand-400' : 'text-muted-foreground group-hover:text-foreground',
+            isActive
+              ? 'text-brand-500 dark:text-brand-400'
+              : 'text-muted-foreground group-hover:text-foreground'
           )}
           strokeWidth={2}
         />
@@ -137,12 +204,15 @@ function PremiumNavItem({
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -10 }}
             >
-              <ChevronRight className="w-3.5 h-3.5 text-brand-500 dark:text-brand-400" strokeWidth={2.2} />
+              <ChevronRight
+                className="w-3.5 h-3.5 text-brand-500 dark:text-brand-400"
+                strokeWidth={2.2}
+              />
             </motion.div>
           )}
         </>
       )}
-    </motion.button>
+    </MotionLink>
   );
 }
 
@@ -169,7 +239,7 @@ function SidebarBody({
       <div
         className={cn(
           'flex items-center h-16 border-b border-white/10 bg-gradient-to-b from-white/5 to-transparent',
-          collapsed ? 'justify-center px-2' : 'justify-between px-5',
+          collapsed ? 'justify-center px-2' : 'justify-between px-5'
         )}
       >
         <motion.div
@@ -182,14 +252,12 @@ function SidebarBody({
               className="absolute inset-0 rounded-xl bg-ai-violet/40 blur-[8px] opacity-60"
               animate={{
                 scale: [1, 1.1, 1],
-                opacity: [0.6, 0.8, 0.6]
+                opacity: [0.6, 0.8, 0.6],
               }}
               transition={{ duration: 3, repeat: Infinity }}
             />
             <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-ai-violet/20 to-brand-500/20 border border-ai-violet/40 flex items-center justify-center shadow-inner backdrop-blur-sm">
-              <motion.div
-                className="absolute inset-0 rounded-xl bg-gradient-to-br from-ai-violet/30 to-brand-500/30 opacity-0 group-hover:opacity-100 transition-opacity"
-              />
+              <motion.div className="absolute inset-0 rounded-xl bg-gradient-to-br from-ai-violet/30 to-brand-500/30 opacity-0 group-hover:opacity-100 transition-opacity" />
               <Bot className="w-5 h-5 text-ai-violet relative z-10" strokeWidth={2.1} />
             </div>
           </div>
@@ -199,7 +267,9 @@ function SidebarBody({
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.1 }}
             >
-              <p className="font-heading font-extrabold text-[14px] leading-tight text-foreground">Nexus</p>
+              <p className="font-heading font-extrabold text-[14px] leading-tight text-foreground">
+                Nexus
+              </p>
               <p className="text-[10px] font-mono text-muted-foreground tracking-wide flex items-center gap-1">
                 <Zap className="w-2.5 h-2.5 text-ai-emerald" strokeWidth={2.5} />
                 AI SALES · v1.0
@@ -253,7 +323,9 @@ function SidebarBody({
       </nav>
 
       {/* Bottom Actions */}
-      <div className={cn('pt-3 pb-8 border-t border-white/10 space-y-2', collapsed ? 'px-2' : 'px-3')}>
+      <div
+        className={cn('pt-3 pb-8 border-t border-white/10 space-y-2', collapsed ? 'px-2' : 'px-3')}
+      >
         <motion.button
           type="button"
           onClick={onToggleCollapse}
@@ -281,7 +353,7 @@ function SidebarBody({
           title={collapsed ? 'Logout' : undefined}
           className={cn(
             'w-full flex items-center rounded-xl text-[13px] font-medium text-muted-foreground hover:text-red-500 hover:bg-red-500/5 border border-transparent hover:border-red-500/20 transition-all duration-200',
-            collapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5',
+            collapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5'
           )}
         >
           <LogOut className="w-[18px] h-[18px] shrink-0" strokeWidth={2} />
@@ -297,9 +369,13 @@ function SidebarBody({
           >
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-ai-emerald shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
-              <p className="text-[11px] font-semibold text-foreground leading-snug">Pro Plan · Active</p>
+              <p className="text-[11px] font-semibold text-foreground leading-snug">
+                Pro Plan · Active
+              </p>
             </div>
-            <p className="text-[10px] font-mono text-muted-foreground mt-0.5 pl-4">Unlimited AI sessions</p>
+            <p className="text-[10px] font-mono text-muted-foreground mt-0.5 pl-4">
+              Unlimited AI sessions
+            </p>
           </motion.div>
         )}
       </div>
@@ -321,7 +397,7 @@ export function DashboardSidebar({
       <aside
         className={cn(
           'hidden md:flex fixed inset-y-0 left-0 z-30 flex-col border-r border-white/10 bg-obsidian-950/80 backdrop-blur-2xl transition-[width] duration-300 ease-out',
-          collapsed ? 'w-[4.5rem]' : 'w-64',
+          collapsed ? 'w-[4.5rem]' : 'w-64'
         )}
       >
         <SidebarBody

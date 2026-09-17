@@ -12,14 +12,20 @@ export const apiClient: AxiosInstance = axios.create({
   withCredentials: true,
 });
 
+const DEV_AUTH_TOKEN = process.env.NEXT_PUBLIC_DEV_AUTH_TOKEN;
+
 // Request Interceptor: Attach Auth Token
 apiClient.interceptors.request.use(
   (config) => {
+    let token: string | null = null;
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('ai_sales_auth_token');
-      if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
+      token = localStorage.getItem('ai_sales_auth_token');
+    }
+    if (!token && DEV_AUTH_TOKEN) {
+      token = DEV_AUTH_TOKEN;
+    }
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },

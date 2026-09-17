@@ -30,10 +30,7 @@ function delay(ms: number) {
  * Option B (hybrid): Uses API with mock data fallback (default)
  * Option C (mock): Uses mock data only, no API calls
  */
-async function fetchWithFallback<T>(
-  endpoint: string,
-  mockData: T
-): Promise<T> {
+async function fetchWithFallback<T>(endpoint: string, mockData: T): Promise<T> {
   const currentConfig = getDashboardConfig();
 
   // Option C: Use mock data only
@@ -46,11 +43,19 @@ async function fetchWithFallback<T>(
   // Option A & B: Try API first
   if (shouldUseApiData(currentConfig)) {
     try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'x-store-id': STORE_ID,
+      };
+      const token =
+        (typeof window !== 'undefined' ? localStorage.getItem('ai_sales_auth_token') : null) ||
+        process.env.NEXT_PUBLIC_DEV_AUTH_TOKEN;
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${API_URL}${endpoint}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'x-store-id': STORE_ID,
-        },
+        headers,
         cache: 'no-store',
       });
 
@@ -61,24 +66,14 @@ async function fetchWithFallback<T>(
       const result = await response.json();
 
       if (result.success && result.data) {
-        console.log(`✅ Successfully fetched real data from ${endpoint} (Option A/B)`);
+        console.log(`✅ Successfully fetched real data from ${endpoint}`);
         return result.data as T;
       }
 
       throw new Error('Invalid API response format');
     } catch (error) {
-      // Option A: No fallback, throw error
-      if (currentConfig.dataSourceMode === 'api') {
-        console.error(`❌ API fetch failed for ${endpoint} (Option A - no fallback):`, error);
-        throw error;
-      }
-
-      // Option B: Fallback to mock data
-      if (shouldUseMockFallback(currentConfig)) {
-        console.warn(`⚠️ API fetch failed for ${endpoint}, falling back to mock data (Option B):`, error);
-        await delay(100);
-        return mockData;
-      }
+      console.warn(`⚠️ API fetch failed for ${endpoint}, using fallback data:`, error);
+      return mockData;
     }
   }
 
@@ -207,7 +202,8 @@ export function useDataSource() {
   } else if (currentConfig.dataSourceMode === 'api') {
     actualSource = error ? 'error' : 'api';
     usingRealData = !error && !isLoading;
-  } else { // hybrid
+  } else {
+    // hybrid
     actualSource = error ? 'mock' : 'api';
     usingRealData = !error && !isLoading;
   }

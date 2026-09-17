@@ -1,15 +1,10 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import {
-  Sparkles,
-  TrendingUp,
-  ShieldCheck,
-  Zap,
-  ArrowUpRight,
-} from 'lucide-react';
+import { Sparkles, TrendingUp, ShieldCheck, Zap, ArrowUpRight } from 'lucide-react';
 import { GlassCard } from '../shared';
 import { useSupabase } from '@/lib/auth/supabase/client';
 import { cn } from '@/lib/utils';
@@ -41,37 +36,40 @@ export function DashboardWelcome() {
               </span>
               <h1 className="font-heading font-extrabold text-2xl sm:text-3xl leading-[1.1] tracking-tight text-balance">
                 Welcome back, {firstName}
-                <span className="bg-gradient-to-r from-brand-500 via-ai-violet to-ai-cyan bg-clip-text text-transparent">.</span>
+                <span className="bg-gradient-to-r from-brand-500 via-ai-violet to-ai-cyan bg-clip-text text-transparent">
+                  .
+                </span>
               </h1>
               <p className="text-sm text-muted-foreground leading-relaxed max-w-lg">
                 Your AI sales assistant closed{' '}
                 <span className="font-semibold text-foreground">128 deals</span> worth{' '}
                 <span className="font-semibold text-ai-emerald">₹3.84L</span> in the last 24 hours.
                 Bundle attachment is trending{' '}
-                <span className="font-semibold text-brand-500 dark:text-brand-400">+24.8%</span> week-over-week.
+                <span className="font-semibold text-brand-500 dark:text-brand-400">+24.8%</span>{' '}
+                week-over-week.
               </p>
               <div className="flex flex-wrap items-center gap-2.5 pt-1">
-                <button
-                  type="button"
-                  onClick={() => router.push('/assistant')}
+                <Link
+                  href="/assistant"
+                  prefetch={true}
                   className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl text-sm font-semibold bg-gradient-to-r from-brand-600 via-brand-500 to-ai-violet text-white shadow-lg shadow-brand-500/20 hover:opacity-95 transition-opacity cursor-pointer active:scale-95"
                 >
                   <Sparkles className="w-4 h-4" strokeWidth={2.1} />
                   Open AI Concierge
-                </button>
-                <button
-                  type="button"
-                  onClick={() => router.push('/analytics')}
+                </Link>
+                <Link
+                  href="/analytics"
+                  prefetch={true}
                   className={cn(
                     'inline-flex items-center gap-1.5 h-10 px-4 rounded-xl text-sm font-semibold cursor-pointer active:scale-95',
                     'border border-border/70 dark:border-white/10 bg-background/50 dark:bg-obsidian-900/50',
-                    'hover:border-brand-500/40 text-foreground transition-colors',
+                    'hover:border-brand-500/40 text-foreground transition-colors'
                   )}
                 >
                   <TrendingUp className="w-4 h-4" strokeWidth={2} />
                   View Full Report
                   <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={2} />
-                </button>
+                </Link>
               </div>
             </div>
             <div className="relative shrink-0 self-start">
